@@ -1,0 +1,38 @@
+{
+  "name": "althos-backend-serverless",
+  "version": "1.0.0",
+  "description": "Serverless backend for Althos Mental Wellness Platform using Google Cloud Functions",
+  "main": "dist/functions/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "serve": "functions-framework --target=healthCheck --port=8080",
+    "deploy": "npm run build && gcloud functions deploy --gen2",
+    "deploy:journal": "gcloud functions deploy journal --runtime nodejs18 --trigger-http --allow-unauthenticated --source dist/functions --entry-point journal",
+    "deploy:ai-coach": "gcloud functions deploy ai-coach --runtime nodejs18 --trigger-http --allow-unauthenticated --source dist/functions --entry-point aiCoach",
+    "deploy:tests": "gcloud functions deploy tests --runtime nodejs18 --trigger-http --allow-unauthenticated --source dist/functions --entry-point tests",
+    "deploy:mood": "gcloud functions deploy mood --runtime nodejs18 --trigger-http --allow-unauthenticated --source dist/functions --entry-point mood",
+    "deploy:shares": "gcloud functions deploy shares --runtime nodejs18 --trigger-http --allow-unauthenticated --source dist/functions --entry-point shares",
+    "deploy:health": "gcloud functions deploy health --runtime nodejs18 --trigger-http --allow-unauthenticated --source dist/functions --entry-point healthCheck",
+    "deploy:all": "npm run deploy:health && npm run deploy:journal && npm run deploy:ai-coach && npm run deploy:tests && npm run deploy:mood && npm run deploy:shares"
+  },
+  "dependencies": {
+    "@google-cloud/functions-framework": "^3.3.0",
+    "@google-cloud/text-to-speech": "^5.0.1",
+    "@google-cloud/aiplatform": "^3.5.0",
+    "pg": "^8.11.3",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.8.0",
+    "@types/pg": "^8.10.7",
+    "@types/uuid": "^9.0.6",
+    "typescript": "^5.2.2"
+  },
+  "engines": {
+    "node": "18"
+  },
+  "keywords": ["mental-health", "ai", "serverless", "google-cloud-functions"],
+  "author": "Althos Team",
+  "license": "MIT"
+}

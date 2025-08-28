@@ -1,0 +1,106 @@
+steps:
+  # Install dependencies
+  - name: 'node:18'
+    entrypoint: 'npm'
+    args: ['install']
+  
+  # Build TypeScript
+  - name: 'node:18'
+    entrypoint: 'npm' 
+    args: ['run', 'build']
+  
+  # Deploy Health Check Function
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'functions'
+      - 'deploy'
+      - 'althos-health'
+      - '--runtime=nodejs18'
+      - '--trigger-http'
+      - '--allow-unauthenticated'
+      - '--source=dist/functions'
+      - '--entry-point=healthCheck'
+      - '--memory=256MB'
+      - '--timeout=60s'
+      - '--region=us-central1'
+  
+  # Deploy Journal Function
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'functions'
+      - 'deploy'
+      - 'althos-journal'
+      - '--runtime=nodejs18'
+      - '--trigger-http'
+      - '--allow-unauthenticated'
+      - '--source=dist/functions'
+      - '--entry-point=journal'
+      - '--memory=512MB'
+      - '--timeout=60s'
+      - '--region=us-central1'
+  
+  # Deploy AI Coach Function
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'functions'
+      - 'deploy'
+      - 'althos-ai-coach'
+      - '--runtime=nodejs18'
+      - '--trigger-http'
+      - '--allow-unauthenticated'
+      - '--source=dist/functions'
+      - '--entry-point=aiJournalCoach'
+      - '--memory=1GB'
+      - '--timeout=120s'
+      - '--region=us-central1'
+  
+  # Deploy Tests Function
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'functions'
+      - 'deploy'
+      - 'althos-tests'
+      - '--runtime=nodejs18'
+      - '--trigger-http'
+      - '--allow-unauthenticated'
+      - '--source=dist/functions'
+      - '--entry-point=testPHQ9'
+      - '--memory=256MB'
+      - '--timeout=30s'
+      - '--region=us-central1'
+  
+  # Deploy Mood Function
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'functions'
+      - 'deploy'
+      - 'althos-mood'
+      - '--runtime=nodejs18'
+      - '--trigger-http'
+      - '--allow-unauthenticated'
+      - '--source=dist/functions'
+      - '--entry-point=moodDaily'
+      - '--memory=256MB'
+      - '--timeout=30s'
+      - '--region=us-central1'
+  
+  # Deploy Shares Function
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'functions'
+      - 'deploy'
+      - 'althos-shares'
+      - '--runtime=nodejs18'
+      - '--trigger-http'
+      - '--allow-unauthenticated'
+      - '--source=dist/functions'
+      - '--entry-point=shareCreate'
+      - '--memory=512MB'
+      - '--timeout=60s'
+      - '--region=us-central1'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'E2_HIGHCPU_8'
+
+timeout: '1200s'
