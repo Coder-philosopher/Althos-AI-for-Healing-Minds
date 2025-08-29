@@ -1,103 +1,111 @@
-import Image from "next/image";
+'use client'
+import Link from 'next/link'
+import { Heart, Brain, Shield, Users } from 'lucide-react'
 
-export default function Home() {
+export default function LandingPage() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <main className="min-h-screen bg-gradient-to-br from-bg to-blue-50">
+      {/* Header */}
+      <header className="container mx-auto px-4 py-6">
+        <nav className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Heart className="h-8 w-8 text-brand" />
+            <span className="text-2xl font-bold text-text-primary">Althos</span>
+          </div>
+          <Link href="/login" className="text-brand hover:text-brand-strong font-medium">
+            Sign In
+          </Link>
+        </nav>
+      </header>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      {/* Hero Section */}
+      <section className="container mx-auto px-4 py-20 text-center animate-fade-in">
+        <h1 className="text-4xl md:text-6xl font-bold text-text-primary mb-6 leading-tight">
+          Your Personal Mental<br />
+          <span className="text-brand">Wellness Companion</span>
+        </h1>
+        <p className="text-xl text-text-secondary mb-12 max-w-3xl mx-auto leading-relaxed">
+          AI-powered journaling, mood tracking, and personalized support designed 
+          specifically for Indian youth navigating modern challenges.
+        </p>
+        
+        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+          <Link href="/register" className="btn-primary text-lg px-8 py-4">
+            Get Started Free
+          </Link>
+          <Link href="/login" className="btn-secondary text-lg px-8 py-4">
+            I Have An Account
+          </Link>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+
+        {/* Trust Indicators */}
+        <div className="flex flex-wrap justify-center items-center gap-8 text-text-secondary text-sm">
+          <div className="flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            <span>100% Private & Secure</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            <span>Built for Indian Youth</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Brain className="h-4 w-4" />
+            <span>AI-Powered Support</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="container mx-auto px-4 py-20">
+        <div className="grid md:grid-cols-3 gap-8">
+          <FeatureCard 
+            title="Smart Journaling"
+            description="Write your thoughts and get empathetic AI responses with personalized coping strategies"
+            icon="✍️"
+            color="info"
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
+          <FeatureCard 
+            title="Mood Atlas"
+            description="Visualize your emotional patterns and discover insights about your mental wellness journey"
+            icon="🧭"
+            color="success"
           />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
+          <FeatureCard 
+            title="Clinical Sharing"
+            description="Securely share your progress with healthcare providers through time-limited links"
+            icon="🏥"
+            color="calm"
           />
-          Go to nextjs.org →
-        </a>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="container mx-auto px-4 py-12 text-center text-text-secondary">
+        <p>&copy; 2025 Althos. Built with ❤️ for Indian youth mental wellness.</p>
       </footer>
+    </main>
+  )
+}
+
+interface FeatureCardProps {
+  title: string
+  description: string
+  icon: string
+  color: 'info' | 'success' | 'calm'
+}
+
+function FeatureCard({ title, description, icon, color }: FeatureCardProps) {
+  const colorClasses = {
+    info: 'bg-info/20 border-info/30',
+    success: 'bg-success/20 border-success/30',
+    calm: 'bg-calm/20 border-calm/30'
+  }
+
+  return (
+    <div className={`card ${colorClasses[color]} animate-slide-up border-2`}>
+      <div className="text-4xl mb-4">{icon}</div>
+      <h3 className="text-xl font-semibold text-text-primary mb-3">{title}</h3>
+      <p className="text-text-secondary leading-relaxed">{description}</p>
     </div>
-  );
+  )
 }

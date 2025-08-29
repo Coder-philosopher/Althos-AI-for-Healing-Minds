@@ -135,8 +135,10 @@ app.get('/profile', requireUser, async (req: any, res, next) => {
   try {
     res.json({
       success: true,
-      data: req.user
+      data: req.user,
+      
     });
+    console.log(req.user);
   } catch (error) {
     next(error);
   }
