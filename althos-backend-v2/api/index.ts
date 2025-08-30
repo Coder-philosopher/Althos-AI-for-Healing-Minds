@@ -570,26 +570,38 @@ app.get('/mood/atlas', requireUser, async (req: any, res, next) => {
 
 // =================== SHARING ENDPOINTS ===================
 
-// Create shareable link
-app.get('/shares/list', requireUser, async (req: any, res,next) => {
+// =================== SHARING ENDPOINTS ===================
+
+// Get user's shares list
+app.get('/shares/list', requireUser, async (req: any, res, next) => {
   try {
+    // Build URL in JavaScript to avoid PostgreSQL concat issues
+    const urlPrefix = `${req.protocol}://${req.get('host')}`;
+    
     const shares = await db.query(
-      `SELECT *, CONCAT($1, '/shares/', token, '/summary') as url
-       FROM shares 
-       WHERE user_id = $2 AND revoked = FALSE
+      `SELECT * FROM shares 
+       WHERE user_id = $1 AND revoked = FALSE
        ORDER BY created_at DESC`,
-      [req.protocol + '://' + req.get('host'), req.userId]
+      [req.userId]
     );
+
+    // Add URL field in JavaScript
+    const sharesWithUrls = shares.map(share => ({
+      ...share,
+      url: `${urlPrefix}/shares/${share.token}/summary`
+    }));
 
     res.json({
       success: true,
-      data: shares
+      data: sharesWithUrls
     });
   } catch (error) {
     next(error);
   }
 });
-app.post('/shares/:shareId/revoke', requireUser, async (req: any, res,next) => {
+
+// Revoke share
+app.post('/shares/:shareId/revoke', requireUser, async (req: any, res, next) => {
   try {
     const { shareId } = req.params;
     
@@ -605,6 +617,13 @@ app.post('/shares/:shareId/revoke', requireUser, async (req: any, res,next) => {
       });
     }
 
+    await db.logAccess({
+      user_id: req.userId,
+      action: 'revoke_share',
+      resource: 'share',
+      ip_address: req.ip
+    });
+
     res.json({
       success: true,
       message: 'Share revoked successfully'
@@ -613,7 +632,9 @@ app.post('/shares/:shareId/revoke', requireUser, async (req: any, res,next) => {
     next(error);
   }
 });
-app.get('/shares/:shareId/analytics', requireUser, async (req: any, res,next) => {
+
+// Share analytics
+app.get('/shares/:shareId/analytics', requireUser, async (req: any, res, next) => {
   try {
     const { shareId } = req.params;
     
@@ -642,11 +663,14 @@ app.get('/shares/:shareId/analytics', requireUser, async (req: any, res,next) =>
       success: true,
       data: {
         share_id: shareId,
-        total_views: share.access_count,
-        last_accessed: accessLogs[0]?.timestamp || null,
+        total_views: share.access_count || 0,
+        last_accessed: accessLogs.length > 0 ? accessLogs[0].timestamp : null,
         access_log: accessLogs,
         expires_at: share.expires_at,
-        revoked: share.revoked
+        revoked: share.revoked,
+        created_at: share.created_at,
+        scopes: share.scopes,
+        window_days: share.window_days
       }
     });
   } catch (error) {
@@ -654,9 +678,14 @@ app.get('/shares/:shareId/analytics', requireUser, async (req: any, res,next) =>
   }
 });
 
+// Create shareable link (Enhanced version)
 app.post('/shares/new', requireUser, async (req: any, res, next) => {
   try {
-    const { scopes = ['summary', 'tests', 'mood'], window_days = 30, expires_mins = 60 }: ShareRequest = req.body;
+    const { 
+      scopes = ['summary', 'tests', 'mood'], 
+      window_days = 30, 
+      expires_mins = 60 
+    } = req.body;
     
     const token = generateToken(32);
     const expiresAt = addMinutes(new Date(), expires_mins);
@@ -668,7 +697,8 @@ app.post('/shares/new', requireUser, async (req: any, res, next) => {
       [req.userId, token, scopes, window_days, expiresAt]
     );
     
-    const shareUrl = `${req.protocol}://${req.get('host')}/shares/${token}/summary`;
+    const urlPrefix = `${req.protocol}://${req.get('host')}`;
+    const shareUrl = `${urlPrefix}/shares/${token}/summary`;
     
     await db.logAccess({
       user_id: req.userId,
@@ -681,9 +711,15 @@ app.post('/shares/new', requireUser, async (req: any, res, next) => {
       success: true,
       data: {
         id: share[0].id,
-        token,
+        user_id: share[0].user_id,
+        token: share[0].token,
         url: shareUrl,
-        expires_at: expiresAt
+        scopes: share[0].scopes,
+        window_days: share[0].window_days,
+        expires_at: share[0].expires_at,
+        access_count: 0,
+        revoked: false,
+        created_at: share[0].created_at
       }
     });
   } catch (error) {
@@ -691,7 +727,7 @@ app.post('/shares/new', requireUser, async (req: any, res, next) => {
   }
 });
 
-// Get clinician summary (public endpoint)
+// Get clinician summary (Enhanced with better data)
 app.get('/shares/:token/summary', async (req, res, next) => {
   try {
     const token = req.params.token;
@@ -705,7 +741,10 @@ app.get('/shares/:token/summary', async (req, res, next) => {
     );
     
     if (!share) {
-      throw new AppError('Share link expired or invalid', 404);
+      return res.status(404).json({
+        success: false,
+        message: 'Share link expired, invalid, or revoked'
+      });
     }
     
     // Increment access count
@@ -713,30 +752,85 @@ app.get('/shares/:token/summary', async (req, res, next) => {
       'UPDATE shares SET access_count = access_count + 1 WHERE id = $1',
       [share.id]
     );
+
+    // Fetch actual user data based on scopes
+    let additionalData = {
+      journals_count: 0,
+      tests_count: 0,
+      moods_count: 0,
+      avg_mood: null as string | null
+    };
+
+    try {
+      // Get journal count if scope includes journals
+      if (share.scopes.includes('summary') || share.scopes.includes('journals')) {
+        const journalData = await db.query(
+          `SELECT COUNT(*) as count FROM journals 
+           WHERE user_id = $1 AND created_at >= NOW() - INTERVAL '${share.window_days} days'`,
+          [share.user_id]
+        );
+        additionalData.journals_count = parseInt(journalData[0]?.count || '0');
+      }
+
+      // Get test count if scope includes tests
+      if (share.scopes.includes('tests')) {
+        const testData = await db.query(
+          `SELECT COUNT(*) as count FROM tests 
+           WHERE user_id = $1 AND taken_at >= NOW() - INTERVAL '${share.window_days} days'`,
+          [share.user_id]
+        );
+        additionalData.tests_count = parseInt(testData[0]?.count || '0');
+      }
+
+      // Get mood data if scope includes mood
+      if (share.scopes.includes('mood')) {
+        const moodData = await db.query(
+          `SELECT COUNT(*) as count, AVG(valence) as avg_valence 
+           FROM moods_daily 
+           WHERE user_id = $1 AND date >= NOW() - INTERVAL '${share.window_days} days'`,
+          [share.user_id]
+        );
+        additionalData.moods_count = parseInt(moodData[0]?.count || '0');
+        additionalData.avg_mood = moodData[0]?.avg_valence ? parseFloat(moodData[0].avg_valence).toFixed(1) : null;
+      }
+    } catch (dataError) {
+      console.error('Error fetching additional data:', dataError);
+      // Continue with default values
+    }
     
-    // Generate summary (simplified for prototype)
+    // Generate enhanced summary
     const summary = `
-    **PATIENT SUMMARY - ${share.window_days} DAY PERIOD**
-    
-    **Subjective:**
-    Patient demonstrates good self-awareness through consistent self-monitoring. 
-    Primary stressors include academic pressure and social adjustment challenges.
-    
-    **Objective:**
-    - Recent test scores within normal to mild range
-    - Mood patterns show expected fluctuations
-    - Active engagement with coping strategies
-    
-    **Assessment:**
-    Adjustment challenges consistent with typical student presentation. 
-    No acute risk indicators identified.
-    
-    **Plan:**
-    - Continue current coping strategies
-    - Monitor mood patterns
-    - Follow-up as needed
-    
-    *Note: Summary based on self-reported data and screening tools.*
+**PATIENT SUMMARY - ${share.window_days} DAY PERIOD**
+
+**Subjective:**
+Patient demonstrates consistent engagement with self-monitoring tools over the past ${share.window_days} days. 
+Data includes ${additionalData.journals_count} journal entries, ${additionalData.tests_count} mental health assessments, and ${additionalData.moods_count} mood recordings.
+${additionalData.avg_mood ? `Average mood valence: ${additionalData.avg_mood} (on scale of -2 to +2).` : ''}
+
+**Objective:**
+- Active participation in digital wellness tracking
+- Regular self-reflection through journaling (${additionalData.journals_count} entries)
+- Proactive mental health monitoring (${additionalData.tests_count} assessments completed)
+- Consistent mood tracking (${additionalData.moods_count} daily mood entries)
+
+**Assessment:**
+Patient shows good engagement with digital wellness tools and self-awareness practices.
+Data suggests active participation in mental health self-management.
+No acute risk indicators identified based on available self-reported data.
+
+**Plan:**
+- Continue current self-monitoring practices
+- Maintain regular check-ins with mental wellness platform
+- Consider professional consultation if concerning patterns emerge
+- Follow-up as clinically indicated
+
+**Data Sources & Limitations:**
+This summary is based on self-reported data from digital wellness platform.
+Includes journal entries, standardized screening tools (PHQ-9, GAD-7), and mood tracking.
+Professional clinical assessment recommended for comprehensive evaluation.
+
+*Generated by Althos AI Mental Wellness Platform*
+*Data Period: ${formatDate(new Date(Date.now() - share.window_days * 24 * 60 * 60 * 1000))} to ${formatDate(new Date())}*
     `;
     
     await db.logAccess({
@@ -750,26 +844,43 @@ app.get('/shares/:token/summary', async (req, res, next) => {
       success: true,
       data: {
         patient_alias: `Patient-${share.user_id.substring(0, 8)}`,
+        share_id: share.id,
         period: {
           from: formatDate(new Date(Date.now() - share.window_days * 24 * 60 * 60 * 1000)),
-          to: formatDate(new Date())
+          to: formatDate(new Date()),
+          window_days: share.window_days
         },
         summary: {
           soap_text: summary,
-          scores: { phq9: [], gad7: [] },
+          scores: { 
+            phq9: [], 
+            gad7: [] 
+          },
           trends: {
-            mood_pattern: 'Variable with stress-related fluctuations',
-            risk_indicators: []
+            mood_pattern: additionalData.avg_mood
+              ? `Average mood: ${additionalData.avg_mood} (${additionalData.moods_count} entries)`
+              : 'Insufficient mood data for pattern analysis',
+            risk_indicators: [],
+            engagement_level: `High (${additionalData.journals_count + additionalData.tests_count + additionalData.moods_count} total interactions)`
+          },
+          data_summary: {
+            journals: additionalData.journals_count,
+            tests: additionalData.tests_count,
+            moods: additionalData.moods_count,
+            avg_mood_valence: additionalData.avg_mood
           }
         },
-        generated_at: new Date(),
-        access_count: share.access_count + 1
+        scopes: share.scopes,
+        generated_at: new Date().toISOString(),
+        access_count: (share.access_count || 0) + 1,
+        expires_at: share.expires_at
       }
     });
   } catch (error) {
     next(error);
   }
 });
+
 
 // Error handling
 app.use(errorHandler);

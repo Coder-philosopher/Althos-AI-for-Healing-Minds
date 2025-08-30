@@ -32,7 +32,7 @@ export default function NewJournalPage() {
   const [isTyping, setIsTyping] = useState(false)
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const intervalRef = useRef<NodeJS.Timeout>()
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     setWordCount(formData.content.trim().split(/\s+/).filter(word => word.length > 0).length)
