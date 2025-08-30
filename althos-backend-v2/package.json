@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "vercel-build": "npm run build",
+    
     "dev": "nodemon --watch src --exec ts-node src/index.ts",
     "start": "node api/index.js",
     "db:init": "echo 'Run sql/schema.sql in your Neon console'"
