@@ -1,6 +1,6 @@
 const API_BASE = process.env.NODE_ENV === 'development' 
-  ? 'https://althos-ai-for-healing-minds-9nq6eg1x2.vercel.app/' 
-  : 'https://your-api-domain.com'
+  ? 'https://althos-ai-for-healing-minds-9nq6eg1x2.vercel.app' 
+  : 'https://althos-ai-for-healing-minds-9nq6eg1x2.vercel.app'
 
 class APIError extends Error {
   constructor(public status: number, message: string, public endpoint?: string) {

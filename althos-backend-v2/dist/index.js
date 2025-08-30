@@ -11,7 +11,14 @@ const ai_1 = __importDefault(require("./ai"));
 const utils_1 = require("./utils");
 const app = (0, express_1.default)();
 // Middleware
-app.use((0, cors_1.default)());
+app.use((0, cors_1.default)({
+    origin: process.env.NODE_ENV === "development"
+        ? "https://althos.nitrr.in"
+        : "https://althos.nitrr.in",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "X-User-Id", "Authorization"],
+    credentials: true
+}));
 app.use(express_1.default.json());
 // Request logging
 app.use((req, res, next) => {

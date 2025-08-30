@@ -26,7 +26,15 @@ import {
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.NODE_ENV === 'development'
+    ? 'https://althos.nitrr.in'
+    : 'https://althos.nitrr.in',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'X-User-Id', 'Authorization'],
+  credentials: true
+}));
+
 app.use(express.json());
 
 // Request logging
