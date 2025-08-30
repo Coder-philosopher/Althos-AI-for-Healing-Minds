@@ -30,7 +30,36 @@ export interface MoodEntry {
   source: string
   created_at: string
 }
+export interface Share {
+  id: string
+  user_id: string
+  token: string
+  scopes: string[]
+  window_days: number
+  expires_at: string
+  revoked: boolean
+  access_count: number
+  created_at: string
+  url: string  // Added for convenience
+}
 
+export interface ShareRequest {
+  scopes?: string[]
+  window_days?: number
+  expires_mins?: number
+}
+
+export interface ShareAnalytics {
+  share_id: string
+  total_views: number
+  last_accessed: string | null
+  access_log: Array<{
+    timestamp: string
+    ip_address?: string
+  }>
+  expires_at: string
+  revoked: boolean
+}
 export interface Test {
   id: string
   user_id: string

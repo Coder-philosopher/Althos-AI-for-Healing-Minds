@@ -5,7 +5,7 @@
   "main": "dist/index.ts",
   "scripts": {
     "build": "tsc",
-    "dev": "nodemon --watch ts-node src/index.ts",
+    "dev": "nodemon --watch ts-node api/index.ts",
     "start": "node dist/index.js",
     "db:init": "echo 'Run sql/schema.sql in your Neon console'"
   },

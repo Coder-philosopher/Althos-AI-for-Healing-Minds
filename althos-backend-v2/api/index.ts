@@ -571,6 +571,89 @@ app.get('/mood/atlas', requireUser, async (req: any, res, next) => {
 // =================== SHARING ENDPOINTS ===================
 
 // Create shareable link
+app.get('/shares/list', requireUser, async (req: any, res,next) => {
+  try {
+    const shares = await db.query(
+      `SELECT *, CONCAT($1, '/shares/', token, '/summary') as url
+       FROM shares 
+       WHERE user_id = $2 AND revoked = FALSE
+       ORDER BY created_at DESC`,
+      [req.protocol + '://' + req.get('host'), req.userId]
+    );
+
+    res.json({
+      success: true,
+      data: shares
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+app.post('/shares/:shareId/revoke', requireUser, async (req: any, res,next) => {
+  try {
+    const { shareId } = req.params;
+    
+    const result = await db.query(
+      'UPDATE shares SET revoked = TRUE WHERE id = $1 AND user_id = $2 RETURNING *',
+      [shareId, req.userId]
+    );
+
+    if (result.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Share not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Share revoked successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+app.get('/shares/:shareId/analytics', requireUser, async (req: any, res,next) => {
+  try {
+    const { shareId } = req.params;
+    
+    const share = await db.queryOne(
+      'SELECT * FROM shares WHERE id = $1 AND user_id = $2',
+      [shareId, req.userId]
+    );
+
+    if (!share) {
+      return res.status(404).json({
+        success: false,
+        message: 'Share not found'
+      });
+    }
+
+    // Get recent access logs
+    const accessLogs = await db.query(
+      `SELECT created_at as timestamp, ip_address
+       FROM access_logs 
+       WHERE user_id = $1 AND resource = 'share' AND action = 'view_summary'
+       ORDER BY created_at DESC LIMIT 10`,
+      [req.userId]
+    );
+
+    res.json({
+      success: true,
+      data: {
+        share_id: shareId,
+        total_views: share.access_count,
+        last_accessed: accessLogs[0]?.timestamp || null,
+        access_log: accessLogs,
+        expires_at: share.expires_at,
+        revoked: share.revoked
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.post('/shares/new', requireUser, async (req: any, res, next) => {
   try {
     const { scopes = ['summary', 'tests', 'mood'], window_days = 30, expires_mins = 60 }: ShareRequest = req.body;
