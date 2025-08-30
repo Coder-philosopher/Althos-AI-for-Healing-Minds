@@ -7,7 +7,7 @@ node_modules/
 !.env.example
 
 # Ignore build output directories
-dist/
+
 build/
 
 # Ignore log files
