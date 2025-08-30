@@ -24,7 +24,6 @@ async function apiCall(endpoint: string, options: RequestInit = {}) {
     throw new APIError(response.status, errorData.message || 'Request failed')
   }
   const data = response.json()
-  console.log(data);
   return data
   
 }

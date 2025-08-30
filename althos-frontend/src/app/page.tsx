@@ -6,7 +6,7 @@ import { Montserrat } from 'next/font/google'
 
 const inter = Montserrat({ 
   subsets: ['latin'],
-  weight: ['500'],
+  weight: ['600'],
   
 })
 
