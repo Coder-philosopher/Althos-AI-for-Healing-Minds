@@ -1,13 +1,13 @@
 {
   "compilerOptions": {
-    "outDir": "api",
-    "rootDir": "src",
     "target": "es2020",
     "module": "commonjs",
-    "esModuleInterop": true,
+    "rootDir": "./src",
+    "outDir": "./api",
     "strict": true,
+    "esModuleInterop": true,
     "skipLibCheck": true
   },
-  "include": ["src"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "api"]
 }
