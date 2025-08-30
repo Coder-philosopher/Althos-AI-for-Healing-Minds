@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "outDir": "./api",
+    "outDir": "./dist",
     "rootDir": "./api",
     "module": "commonjs",
     "target": "es2020",
@@ -9,5 +9,5 @@
     "strict": true
   },
   "include": ["api"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "dist"]
 }
