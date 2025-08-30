@@ -1,4 +1,3 @@
-const { fontFamily } = require("tailwindcss/defaultTheme")
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -10,9 +9,7 @@ module.exports = {
   ],
   theme: {
     extend: {
-      fontFamily: {
-        sans: ["Inter", ...fontFamily.sans],
-      },
+     
       colors: {
         bg: '#F6F8FB',
         surface: '#FFFFFF',
