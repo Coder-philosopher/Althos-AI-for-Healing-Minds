@@ -57,7 +57,7 @@ export default function RegisterPage() {
         age: formData.age ? parseInt(formData.age) : undefined
       })
       
-      localStorage.setItem('userId', userId)
+      sessionStorage.setItem('userId', userId)
       router.push('/dashboard')
     } catch (err) {
       console.log(err);

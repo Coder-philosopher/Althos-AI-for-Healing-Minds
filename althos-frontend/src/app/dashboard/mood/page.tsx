@@ -29,7 +29,7 @@ export default function MoodPage() {
     if (user) {
       // Check if already submitted today
       const today = new Date().toISOString().split('T')[0]
-      const lastSubmission = localStorage.getItem(`mood_${user.id}_${today}`)
+      const lastSubmission = sessionStorage.getItem(`mood_${user.id}_${today}`)
       if (lastSubmission) {
         setSubmitted(true)
         setLastSubmissionTime(lastSubmission)
@@ -71,7 +71,7 @@ export default function MoodPage() {
       
       setSubmitted(true)
       setLastSubmissionTime(now)
-      localStorage.setItem(`mood_${user.id}_${today}`, now)
+      sessionStorage.setItem(`mood_${user.id}_${today}`, now)
       
       // Celebration animation
       setTimeout(() => setIsAnimating(false), 2000)
@@ -186,7 +186,7 @@ export default function MoodPage() {
                     <button
                       onClick={() => {
                         setSubmitted(false)
-                        localStorage.removeItem(`mood_${user?.id}_${new Date().toISOString().split('T')[0]}`)
+                        sessionStorage.removeItem(`mood_${user?.id}_${new Date().toISOString().split('T')[0]}`)
                       }}
                       className="px-6 py-3 bg-gradient-to-r from-[#FFEDFA]/60 to-[#FFB8E0]/40 hover:from-[#FFB8E0]/40 hover:to-[#EC7FA9]/30 border border-[#FFB8E0]/40 hover:border-[#EC7FA9]/50 text-[#BE5985] hover:text-[#EC7FA9] font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-[#FFB8E0]/30 hover:-translate-y-0.5"
                     >

@@ -31,7 +31,7 @@ export default function LoginPage() {
     try {
       // Validate user exists
       await getProfile(userId)
-      localStorage.setItem('userId', userId)
+      sessionStorage.setItem('userId', userId)
       router.push('/dashboard')
     } catch (err) {
       console.log(err);

@@ -39,7 +39,7 @@ export function TopNav({ onMenuClick }: TopNavProps) {
   }
 
   const handleLogout = () => {
-    localStorage.removeItem('userId')
+    sessionStorage.removeItem('userId')
     window.location.href = '/login'
   }
 

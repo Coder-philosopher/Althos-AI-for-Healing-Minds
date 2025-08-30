@@ -27,7 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   const refreshUser = async () => {
-    const userId = localStorage.getItem('userId')
+    const userId = sessionStorage.getItem('userId')
     if (!userId) {
       setUser(null)
       setLoading(false)
@@ -40,7 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(response.data)
     } catch (error) {
       console.error('Failed to get user profile:', error)
-      localStorage.removeItem('userId')
+      sessionStorage.removeItem('userId')
       setUser(null)
     } finally {
       setLoading(false)
