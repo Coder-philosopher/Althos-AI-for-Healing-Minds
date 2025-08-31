@@ -17,7 +17,7 @@ export default function LoginPage() {
   const [userId, setUserId] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [redirectCountdown, setRedirectCountdown] = useState(5)
+  const [redirectCountdown, setRedirectCountdown] = useState(10)
   const [redirecting, setRedirecting] = useState(false)
 
 
@@ -31,7 +31,7 @@ useEffect(() => {
 
   const timer = setTimeout(() => {
     setRedirectCountdown((prev) => prev - 1)
-  }, 1000)
+  }, 2000)
 
   return () => clearTimeout(timer)
 }, [redirecting, redirectCountdown, router])
@@ -41,7 +41,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   setLoading(true)
   setError('')
   setRedirecting(false)
-  setRedirectCountdown(5)
+  setRedirectCountdown(10)
 
   if (!userId.trim()) {
     setError('User ID is required')
@@ -94,7 +94,7 @@ const handleSubmit = async (e: React.FormEvent) => {
             <span className="text-2xl font-bold text-[#BE5985]">Althos</span>
           </div>
           <h1 className="text-3xl font-bold text-[#BE5985] mb-2">Welcome Back</h1>
-          <p className="text-[#BE5985]/70">Enter your User ID to continue</p>
+          <p className="text-[#BE5985]/70">Enter your User ID to continue (it will take few moments to load please Wait)</p>
         </div>
 
         {/* Form */}
@@ -173,7 +173,7 @@ const handleSubmit = async (e: React.FormEvent) => {
               href="/dashboard"
               className="text-[#EC7FA9] hover:text-[#BE5985] font-medium underline underline-offset-4 decoration-2 decoration-[#FFB8E0] hover:decoration-[#EC7FA9] mt-2 inline-block"
             >
-              Click here if you’re not redirected
+              Click here if you&apos;re not redirected
             </Link>
           </div>
         )}
