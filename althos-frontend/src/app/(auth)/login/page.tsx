@@ -36,7 +36,7 @@ export default function LoginPage() {
       // Add 2-second delay before redirect
       setTimeout(() => {
         router.push('/dashboard')
-      }, 2000)
+      }, 5000)
     } catch (err) {
       console.log(err);
       setError('User not found. Please check your User ID or register a new account.')
@@ -110,7 +110,7 @@ export default function LoginPage() {
             {loading ? (
               <div className="flex items-center justify-center gap-2">
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                Signing In...
+                Signing In 'This will take some moments'...
               </div>
             ) : 'Sign In'}
           </button>
