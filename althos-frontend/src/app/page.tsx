@@ -110,7 +110,7 @@ export default function LandingPage() {
         <footer className="relative z-10 max-w-6xl mx-auto px-4 py-12 text-center">
           <div className="inline-block px-8 py-4 rounded-full bg-white/80 backdrop-blur-md border border-[#FFB8E0]/30 shadow-inner shadow-[#FFEDFA]/50">
             <p className="text-[#BE5985]/70 font-light">
-              &copy; 2025 Althos. Built with <span className="text-[#EC7FA9]">❤️</span> for Indian youth mental wellness.
+              &copy; 2025 Althos. Built by team  <span className="text-[#EC7FA9]">SkyMax</span> for Indian youth mental wellness.
             </p>
           </div>
         </footer>

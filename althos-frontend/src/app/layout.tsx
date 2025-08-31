@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Althos - Mental Wellness Companion',
-  description: 'AI-powered mental health support for Indian youth',
+  description: 'AI-powered mental health support for Youth',
 }
 
 export default function RootLayout({

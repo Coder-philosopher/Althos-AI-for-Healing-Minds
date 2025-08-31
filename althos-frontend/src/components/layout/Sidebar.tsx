@@ -168,7 +168,7 @@ export function Sidebar({ isMobileOpen = false, setIsMobileOpen }: SidebarProps)
         {showText && (
           <div className="p-4 text-center border-t border-[#FFB8E0]/20">
             <p className="text-xs text-[#BE5985]/60">
-              Built with <span className="text-[#EC7FA9]">❤️</span> for mental wellness
+              Built by team <span className="text-[#EC7FA9]">SkyMax</span> for mental wellness
             </p>
           </div>
         )}

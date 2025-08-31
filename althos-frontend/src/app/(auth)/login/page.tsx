@@ -32,7 +32,11 @@ export default function LoginPage() {
       // Validate user exists
       await getProfile(userId)
       sessionStorage.setItem('userId', userId)
-      router.push('/dashboard')
+
+      // Add 2-second delay before redirect
+      setTimeout(() => {
+        router.push('/dashboard')
+      }, 2000)
     } catch (err) {
       console.log(err);
       setError('User not found. Please check your User ID or register a new account.')
@@ -43,7 +47,7 @@ export default function LoginPage() {
 
   // Demo user for quick access
   const useDemoUser = () => {
-    const demoId = '550e8400-e29b-41d4-a716-446655440000'
+    const demoId = '0be07fe4-72af-4dcb-8a56-8f9925b449c7'
     setUserId(demoId)
   }
 
