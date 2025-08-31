@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
 import { getJournalCoaching } from '@/lib/api'
@@ -13,7 +13,7 @@ const montserrat = Montserrat({
   weight: ['600'],
 })
 
-export default function JournalCoachPage() {
+function JournalCoachContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user } = useAuth()
@@ -372,5 +372,12 @@ export default function JournalCoachPage() {
         </Link>
       </div>
     </div>
+  )
+}
+export default function JournalCoachPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <JournalCoachContent />
+    </Suspense>
   )
 }
