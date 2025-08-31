@@ -27,7 +27,7 @@ const navigation = [
   { name: 'Settings', href: '/dashboard/settings', icon: Settings, badge: null },
 ]
 
-export default function Sidebar({ children }: { children: React.ReactNode }) {
+export function Sidebar({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(false)
