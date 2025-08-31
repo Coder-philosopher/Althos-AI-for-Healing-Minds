@@ -27,13 +27,9 @@ const navigation = [
   { name: 'Settings', href: '/dashboard/settings', icon: Settings, badge: null },
 ]
 
-interface SidebarProps {
-  isMobileOpen?: boolean
-  setIsMobileOpen?: (open: boolean) => void
-}
-
-export function Sidebar({ isMobileOpen = false, setIsMobileOpen }: SidebarProps) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const [isMobileOpen, setIsMobileOpen] = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isDesktop, setIsDesktop] = useState(false)
 
@@ -50,12 +46,12 @@ export function Sidebar({ isMobileOpen = false, setIsMobileOpen }: SidebarProps)
   const showText = !isCollapsed
 
   return (
-    <>
+    <div className="flex">
       {/* Mobile Overlay */}
       {isMobileOpen && (
         <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
-          onClick={() => setIsMobileOpen?.(false)}
+          onClick={() => setIsMobileOpen(false)}
         />
       )}
 
@@ -88,8 +84,8 @@ export function Sidebar({ isMobileOpen = false, setIsMobileOpen }: SidebarProps)
 
             {/* Mobile close button */}
             <button
-              title='Close'
-              onClick={() => setIsMobileOpen?.(false)}
+              title="Close"
+              onClick={() => setIsMobileOpen(false)}
               className="lg:hidden p-2 rounded-xl hover:bg-[#FFEDFA]/50 text-[#BE5985] transition-colors"
             >
               <X className="h-5 w-5" />
@@ -112,18 +108,19 @@ export function Sidebar({ isMobileOpen = false, setIsMobileOpen }: SidebarProps)
                     : 'text-[#BE5985]/70 hover:text-[#BE5985] hover:bg-[#FFEDFA]/50 hover:shadow-md hover:shadow-[#FFB8E0]/20'
                 )}
                 style={{ animationDelay: `${index * 50}ms` }}
+                onClick={() => setIsMobileOpen(false)} // auto-close on mobile
               >
                 {/* Active indicator */}
                 {isActive && (
                   <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-[#EC7FA9] to-[#BE5985] rounded-r-full" />
                 )}
 
-                <div className={cn(
-                  'p-2 rounded-xl transition-all duration-300',
-                  isActive
-                    ? 'bg-white/80 shadow-inner'
-                    : 'group-hover:bg-white/60'
-                )}>
+                <div
+                  className={cn(
+                    'p-2 rounded-xl transition-all duration-300',
+                    isActive ? 'bg-white/80 shadow-inner' : 'group-hover:bg-white/60'
+                  )}
+                >
                   <item.icon className="h-5 w-5 flex-shrink-0" />
                 </div>
 
@@ -133,12 +130,14 @@ export function Sidebar({ isMobileOpen = false, setIsMobileOpen }: SidebarProps)
                       {item.name}
                     </span>
                     {item.badge && (
-                      <span className={cn(
-                        'px-2 py-1 text-xs font-medium rounded-full transition-all duration-300',
-                        item.badge === 'New'
-                          ? 'bg-gradient-to-r from-[#EC7FA9] to-[#BE5985] text-white'
-                          : 'bg-[#FFB8E0]/30 text-[#BE5985] border border-[#FFB8E0]/50'
-                      )}>
+                      <span
+                        className={cn(
+                          'px-2 py-1 text-xs font-medium rounded-full transition-all duration-300',
+                          item.badge === 'New'
+                            ? 'bg-gradient-to-r from-[#EC7FA9] to-[#BE5985] text-white'
+                            : 'bg-[#FFB8E0]/30 text-[#BE5985] border border-[#FFB8E0]/50'
+                        )}
+                      >
                         {item.badge}
                       </span>
                     )}
@@ -149,7 +148,7 @@ export function Sidebar({ isMobileOpen = false, setIsMobileOpen }: SidebarProps)
           })}
         </nav>
 
-        {/* Collapse Toggle */}
+        {/* Collapse Toggle (Desktop only) */}
         <div className="hidden lg:flex items-center justify-center p-4 border-t border-[#FFB8E0]/20">
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
@@ -186,6 +185,23 @@ export function Sidebar({ isMobileOpen = false, setIsMobileOpen }: SidebarProps)
           }
         `}</style>
       </div>
-    </>
+
+      {/* Main Content */}
+      <div className="flex-1 min-h-screen flex flex-col">
+        {/* Topbar (Mobile only) */}
+        <header className="lg:hidden flex items-center p-4 border-b border-[#FFB8E0]/20 bg-white sticky top-0 z-30">
+          <button
+            onClick={() => setIsMobileOpen(true)}
+            className="p-2 rounded-xl text-[#BE5985] hover:bg-[#FFEDFA]/60 transition-colors"
+          >
+            <Menu className="h-6 w-6" />
+          </button>
+          <h1 className="ml-3 font-semibold text-[#BE5985]">Dashboard</h1>
+        </header>
+
+        {/* Page Content */}
+        <main className="flex-1 p-4">{children}</main>
+      </div>
+    </div>
   )
 }
