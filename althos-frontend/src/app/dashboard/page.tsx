@@ -1,4 +1,5 @@
 'use client'
+import { useEffect } from 'react'
 import { useAuth } from '@/lib/auth'
 import { WelcomeCard } from '@/components/dashboard/WelcomeCard'
 import { QuickMoodEntry } from '@/components/dashboard/QuickMoodEntry'
@@ -9,6 +10,19 @@ import { UpcomingReminders } from '@/components/dashboard/UpcomingReminders'
 
 export default function Dashboard() {
   const { user } = useAuth()
+
+  useEffect(() => {
+    const hasVisited = sessionStorage.getItem('dashboardVisited')
+
+    if (!hasVisited) {
+      const timer = setTimeout(() => {
+        sessionStorage.setItem('dashboardVisited', 'true')
+        window.location.reload()
+      }, 3000)
+
+      return () => clearTimeout(timer)
+    }
+  }, [])
 
   return (
     <div className="space-y-6 animate-fade-in">

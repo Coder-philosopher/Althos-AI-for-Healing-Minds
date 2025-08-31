@@ -28,7 +28,7 @@ const app = express();
 // Middleware
 app.use(cors({
   origin: process.env.NODE_ENV === 'development'
-    ? 'https://althos.nitrr.in'
+    ? 'http://localhost:3000'
     : 'https://althos.nitrr.in',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'X-User-Id', 'Authorization'],

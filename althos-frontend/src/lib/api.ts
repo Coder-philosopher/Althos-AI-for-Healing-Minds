@@ -1,5 +1,5 @@
 const API_BASE = process.env.NODE_ENV === 'development' 
-  ? 'https://althos-ai-for-healing-minds-ivory.vercel.app' 
+  ? 'http://localhost:8080' 
   : 'https://althos-ai-for-healing-minds-ivory.vercel.app'
 
 class APIError extends Error {
