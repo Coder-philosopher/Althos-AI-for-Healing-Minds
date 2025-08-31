@@ -1,12 +1,13 @@
 'use client'
-import { useState } from 'react'
+
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Heart, ArrowLeft } from 'lucide-react'
 import { getProfile } from '@/lib/api'
 import { Montserrat } from 'next/font/google'
 
-const montserrat = Montserrat({ 
+const montserrat = Montserrat({
   subsets: ['latin'],
   weight: ['600'],
 })
@@ -16,36 +17,54 @@ export default function LoginPage() {
   const [userId, setUserId] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [redirectCountdown, setRedirectCountdown] = useState(5)
+  const [redirecting, setRedirecting] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
 
-    if (!userId.trim()) {
-      setError('User ID is required')
-      setLoading(false)
-      return
-    }
+useEffect(() => {
+  if (!redirecting) return
 
-    try {
-      // Validate user exists
-      await getProfile(userId)
-      sessionStorage.setItem('userId', userId)
-
-      // Add 2-second delay before redirect
-      setTimeout(() => {
-        router.push('/dashboard')
-      }, 5000)
-    } catch (err) {
-      console.log(err);
-      setError('User not found. Please check your User ID or register a new account.')
-    } finally {
-      setLoading(false)
-    }
+  if (redirectCountdown <= 0) {
+    router.push('/dashboard')
+    return
   }
 
-  // Demo user for quick access
+  const timer = setTimeout(() => {
+    setRedirectCountdown((prev) => prev - 1)
+  }, 1000)
+
+  return () => clearTimeout(timer)
+}, [redirecting, redirectCountdown, router])
+
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault()
+  setLoading(true)
+  setError('')
+  setRedirecting(false)
+  setRedirectCountdown(5)
+
+  if (!userId.trim()) {
+    setError('User ID is required')
+    setLoading(false)
+    return
+  }
+
+  try {
+    const profile = await getProfile(userId)
+    sessionStorage.setItem('userId', userId)
+
+    // Trigger redirect countdown
+    setRedirecting(true)
+
+  } catch (err) {
+    console.error('Login error:', err)
+    setError('User not found. Please check your User ID or register a new account.')
+  } finally {
+    setLoading(false)
+  }
+}
+
+
   const useDemoUser = () => {
     const demoId = '0be07fe4-72af-4dcb-8a56-8f9925b449c7'
     setUserId(demoId)
@@ -56,18 +75,18 @@ export default function LoginPage() {
       {/* Floating background elements */}
       <div className="absolute top-[15%] right-[15%] w-64 h-64 rounded-full bg-gradient-to-br from-[#FFB8E0]/20 to-[#EC7FA9]/15 blur-[50px] z-0" />
       <div className="absolute bottom-[20%] left-[20%] w-48 h-48 rounded-full bg-gradient-to-br from-[#BE5985]/10 to-[#FFEDFA]/30 blur-[35px] z-0" />
-      
+
       <div className="w-full max-w-md relative z-10">
         {/* Header */}
         <div className="text-center mb-8">
-          <Link 
-            href="/" 
+          <Link
+            href="/"
             className="inline-flex items-center gap-2 text-[#EC7FA9] hover:text-[#BE5985] mb-6 px-4 py-2 rounded-full bg-white/80 backdrop-blur-md border border-[#FFB8E0]/30 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
           >
             <ArrowLeft className="h-4 w-4" />
             <span>Back to Home</span>
           </Link>
-          
+
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="p-3 rounded-full bg-white/90 backdrop-blur-md border border-[#FFB8E0]/40 shadow-lg shadow-[#EC7FA9]/20">
               <Heart className="h-8 w-8 text-[#EC7FA9]" />
@@ -102,15 +121,15 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <button 
-            type="submit" 
-            disabled={loading} 
+          <button
+            type="submit"
+            disabled={loading}
             className="w-full px-8 py-4 text-lg font-semibold text-white rounded-2xl shadow-lg shadow-[#EC7FA9]/30 transition-all duration-300 backdrop-blur-md border border-white/20 bg-gradient-to-r from-[#EC7FA9] to-[#BE5985] hover:-translate-y-1 hover:shadow-xl hover:shadow-[#EC7FA9]/40 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
           >
             {loading ? (
               <div className="flex items-center justify-center gap-2">
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                Signing In 'This will take some moments'...
+                Signing In...
               </div>
             ) : 'Sign In'}
           </button>
@@ -124,7 +143,7 @@ export default function LoginPage() {
               Use Demo Account
             </button>
           </div>
-
+          
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-[#FFB8E0]/40"></div>
@@ -136,8 +155,8 @@ export default function LoginPage() {
 
           <div className="text-center text-sm text-[#BE5985]/70">
             Don&apos;t have an account?{' '}
-            <Link 
-              href="/register" 
+            <Link
+              href="/register"
               className="text-[#EC7FA9] hover:text-[#BE5985] font-medium transition-colors duration-300 underline underline-offset-4 decoration-2 decoration-[#FFB8E0] hover:decoration-[#EC7FA9]"
             >
               Register here
@@ -145,7 +164,20 @@ export default function LoginPage() {
           </div>
         </form>
 
-        {/* Additional Visual Elements */}
+        {/* Redirect Feedback */}
+        {redirecting && (
+          <div className="mt-6 text-center text-sm text-[#BE5985]/70">
+            Redirecting to your <strong className="text-[#EC7FA9]">Dashboard</strong> in <strong>{redirectCountdown}</strong> seconds...
+            <br />
+            <Link
+              href="/dashboard"
+              className="text-[#EC7FA9] hover:text-[#BE5985] font-medium underline underline-offset-4 decoration-2 decoration-[#FFB8E0] hover:decoration-[#EC7FA9] mt-2 inline-block"
+            >
+              Click here if you’re not redirected
+            </Link>
+          </div>
+        )}
+
         <div className="mt-8 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/70 backdrop-blur-md border border-[#FFB8E0]/30 shadow-sm">
             <div className="w-2 h-2 bg-[#EC7FA9] rounded-full animate-pulse"></div>

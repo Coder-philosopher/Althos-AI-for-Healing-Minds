@@ -1,16 +1,17 @@
 'use client'
+
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { 
-  Heart, Home, PenTool, Brain, Smile, 
-  TestTube2, Share2, User, Settings, 
+import {
+  Heart, Home, PenTool, Brain, Smile,
+  TestTube2, Share2, User, Settings,
   Menu, X, ChevronLeft, ChevronRight
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Montserrat } from 'next/font/google'
 
-const montserrat = Montserrat({ 
+const montserrat = Montserrat({
   subsets: ['latin'],
   weight: ['600'],
 })
@@ -34,44 +35,38 @@ interface SidebarProps {
 export function Sidebar({ isMobileOpen = false, setIsMobileOpen }: SidebarProps) {
   const pathname = usePathname()
   const [isCollapsed, setIsCollapsed] = useState(false)
-  const [isHovered, setIsHovered] = useState(false)
+  const [isDesktop, setIsDesktop] = useState(false)
 
-  // Auto-collapse on mobile
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 1024) {
-        setIsCollapsed(true)
-      }
+      setIsDesktop(window.innerWidth >= 1024)
     }
-    
     handleResize()
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  const sidebarWidth = isCollapsed && !isHovered ? 'w-20' : 'w-72'
-  const showText = !isCollapsed || isHovered
+  const sidebarWidth = isCollapsed ? 'w-20' : 'w-72'
+  const showText = !isCollapsed
 
   return (
     <>
       {/* Mobile Overlay */}
       {isMobileOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
           onClick={() => setIsMobileOpen?.(false)}
         />
       )}
 
       {/* Sidebar */}
-      <div 
+      <div
         className={cn(
           `${montserrat.className} fixed lg:relative inset-y-0 left-0 z-50 flex flex-col transition-all duration-300 ease-in-out`,
           sidebarWidth,
           'bg-white/95 backdrop-blur-md border-r border-[#FFB8E0]/30 shadow-xl shadow-[#FFB8E0]/10',
           isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
       >
         {/* Floating background elements */}
         <div className="absolute top-10 -right-5 w-20 h-20 rounded-full bg-gradient-to-br from-[#FFB8E0]/10 to-[#EC7FA9]/5 blur-xl -z-10" />
@@ -90,9 +85,10 @@ export function Sidebar({ isMobileOpen = false, setIsMobileOpen }: SidebarProps)
                 </span>
               )}
             </div>
-            
+
             {/* Mobile close button */}
             <button
+              title='Close'
               onClick={() => setIsMobileOpen?.(false)}
               className="lg:hidden p-2 rounded-xl hover:bg-[#FFEDFA]/50 text-[#BE5985] transition-colors"
             >
@@ -121,16 +117,16 @@ export function Sidebar({ isMobileOpen = false, setIsMobileOpen }: SidebarProps)
                 {isActive && (
                   <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-[#EC7FA9] to-[#BE5985] rounded-r-full" />
                 )}
-                
+
                 <div className={cn(
                   'p-2 rounded-xl transition-all duration-300',
-                  isActive 
-                    ? 'bg-white/80 shadow-inner' 
+                  isActive
+                    ? 'bg-white/80 shadow-inner'
                     : 'group-hover:bg-white/60'
                 )}>
                   <item.icon className="h-5 w-5 flex-shrink-0" />
                 </div>
-                
+
                 {showText && (
                   <div className="flex items-center justify-between w-full overflow-hidden">
                     <span className="whitespace-nowrap transition-all duration-300">
@@ -153,7 +149,7 @@ export function Sidebar({ isMobileOpen = false, setIsMobileOpen }: SidebarProps)
           })}
         </nav>
 
-        {/* Collapse Toggle (Desktop only) */}
+        {/* Collapse Toggle */}
         <div className="hidden lg:flex items-center justify-center p-4 border-t border-[#FFB8E0]/20">
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
@@ -173,14 +169,13 @@ export function Sidebar({ isMobileOpen = false, setIsMobileOpen }: SidebarProps)
           </div>
         )}
 
-        {/* Custom Scrollbar Styles */}
+        {/* Scrollbar Styling */}
         <style jsx>{`
           .custom-scrollbar::-webkit-scrollbar {
             width: 6px;
           }
           .custom-scrollbar::-webkit-scrollbar-track {
             background: rgba(255, 184, 224, 0.1);
-            border-radius: 3px;
           }
           .custom-scrollbar::-webkit-scrollbar-thumb {
             background: rgba(236, 127, 169, 0.3);
