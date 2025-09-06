@@ -51,6 +51,15 @@ export function Sidebar({ isMobileOpen = false, setIsMobileOpen }: SidebarProps)
 
   return (
     <>
+      {/* Mobile Hamburger Button (NEW) */}
+      <button
+        onClick={() => setIsMobileOpen?.(true)}
+        className="fixed top-4 left-4 z-50 lg:hidden p-2 rounded-xl hover:bg-[#FFEDFA]/50 text-[#BE5985] transition-colors"
+        title="Open menu"
+      >
+        <Menu className="h-6 w-6" />
+      </button>
+
       {/* Mobile Overlay */}
       {isMobileOpen && (
         <div
