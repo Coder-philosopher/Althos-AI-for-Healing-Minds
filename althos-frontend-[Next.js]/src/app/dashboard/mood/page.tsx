@@ -385,9 +385,9 @@ export default function MoodPage() {
               </h4>
               <div className="text-center">
                 <div className="relative mb-4">
-                  <div className="text-3xl font-bold text-[#BE5985] mb-1">5/7</div>
+                  <div className="text-3xl font-bold text-[#BE5985] mb-1">2/7</div>
                   <div className="w-full bg-[#FFB8E0]/30 rounded-full h-2">
-                    <div className="bg-gradient-to-r from-[#EC7FA9] to-[#BE5985] h-2 rounded-full transition-all duration-1000" style={{ width: '71%' }}></div>
+                    <div className="bg-gradient-to-r from-[#EC7FA9] to-[#BE5985] h-2 rounded-full transition-all duration-1000" style={{ width: '28%' }}></div>
                   </div>
                 </div>
                 <p className="text-sm text-[#BE5985]/70">
