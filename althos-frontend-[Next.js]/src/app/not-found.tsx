@@ -186,7 +186,7 @@ export default function NotFound() {
               className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-[#EC7FA9] to-[#BE5985] text-white font-semibold rounded-2xl shadow-lg shadow-[#EC7FA9]/30 hover:shadow-xl hover:shadow-[#EC7FA9]/40 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group"
             >
               <Home className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
-              <span className="relative z-10">Back to Home</span>
+              <span className="relative z-10">Let's Go Back to Home</span>
               <div className="absolute inset-0 bg-gradient-to-r from-[#BE5985] to-[#EC7FA9] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </Link>
             
