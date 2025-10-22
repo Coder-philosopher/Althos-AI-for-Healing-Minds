@@ -79,13 +79,55 @@ export const getJournals = async (userId: string, limit = 20, offset = 0) => {
   })
 }
 
-export const getJournalCoaching = async (userId: string, data: any) => {
+export const generateJournalAudio = async (
+  userId: string, 
+  journalId: string, 
+  language: string
+) => {
+  return apiCall('/ai/journal-audio', {
+    method: 'POST',
+    headers: { 'X-User-Id': userId },
+    body: JSON.stringify({ journal_id: journalId, language }),
+  })
+}
+
+export const getSupportedLanguagesAudio = async () => {
+  return apiCall('/ai/supported-languages', {
+    method: 'GET',
+  })
+}
+
+
+export const getJournalCoaching = async (userId: string, journalId: string) => {
   return apiCall('/ai/journal-coach', {
     method: 'POST',
+    headers: { 'X-User-Id': userId },
+    body: JSON.stringify({ journal_id: journalId }),
+  })
+}
+
+
+export const getJournalById = async (userId: string, journalId: string) => {
+  return apiCall(`/journal/${journalId}`, {
+    headers: { 'X-User-Id': userId },
+  })
+}
+
+export const updateJournal = async (userId: string, journalId: string, data: any) => {
+  return apiCall(`/journal/${journalId}`, {
+    method: 'PUT',
     headers: { 'X-User-Id': userId },
     body: JSON.stringify(data),
   })
 }
+
+export const deleteJournal = async (userId: string, journalId: string) => {
+  return apiCall(`/journal/${journalId}`, {
+    method: 'DELETE',
+    headers: { 'X-User-Id': userId },
+  })
+}
+
 
 // -----------------------
 // Tests

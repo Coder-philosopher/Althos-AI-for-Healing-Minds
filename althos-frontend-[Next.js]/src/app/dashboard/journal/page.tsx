@@ -254,79 +254,79 @@ function JournalCard({ journal, index }: { journal: Journal; index: number }) {
   const wordCount = journal.content.trim().split(/\s+/).filter(word => word.length > 0).length
 
   return (
-    <div 
-      className="group p-6 rounded-3xl bg-white/90 backdrop-blur-md border border-[#FFB8E0]/40 shadow-xl shadow-[#FFB8E0]/20 hover:shadow-2xl hover:shadow-[#EC7FA9]/25 transition-all duration-500 hover:-translate-y-1 relative overflow-hidden cursor-pointer"
-      style={{ animationDelay: `${index * 100}ms` }}
-    >
-      {/* Floating background element */}
-      <div className="absolute -top-4 -right-4 w-16 h-16 bg-gradient-to-br from-[#FFB8E0]/20 to-[#EC7FA9]/10 rounded-full blur-lg group-hover:scale-110 transition-transform duration-700" />
-      
-      <div className="relative z-10">
-        <div className="flex items-start gap-4 mb-4">
-          <div className="flex-shrink-0">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-[#EC7FA9] to-[#BE5985] shadow-lg shadow-[#EC7FA9]/30 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300">
-              <Calendar className="h-5 w-5 text-white" />
+    <Link href={`/dashboard/journal/${journal.id}`}>
+      <div 
+        className="group p-6 rounded-3xl bg-white/90 backdrop-blur-md border border-[#FFB8E0]/40 shadow-xl shadow-[#FFB8E0]/20 hover:shadow-2xl hover:shadow-[#EC7FA9]/25 transition-all duration-500 hover:-translate-y-1 relative overflow-hidden cursor-pointer"
+        style={{ animationDelay: `${index * 100}ms` }}
+      >
+        {/* Floating background element */}
+        <div className="absolute -top-4 -right-4 w-16 h-16 bg-gradient-to-br from-[#FFB8E0]/20 to-[#EC7FA9]/10 rounded-full blur-lg group-hover:scale-110 transition-transform duration-700" />
+        
+        <div className="relative z-10">
+          <div className="flex items-start gap-4 mb-4">
+            <div className="flex-shrink-0">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-[#EC7FA9] to-[#BE5985] shadow-lg shadow-[#EC7FA9]/30 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300">
+                <Calendar className="h-5 w-5 text-white" />
+              </div>
+            </div>
+            
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-3">
+                  <h3 className="text-lg font-bold text-[#BE5985] group-hover:text-[#EC7FA9] transition-colors duration-300 truncate">
+                    {journal.title || 'Untitled Entry'}
+                  </h3>
+                  {moodEmoji && (
+                    <span className="text-2xl group-hover:scale-110 transition-transform duration-300">{moodEmoji}</span>
+                  )}
+                </div>
+                <Star className="h-4 w-4 text-[#BE5985]/50 group-hover:text-[#EC7FA9] group-hover:fill-current transition-all duration-300 flex-shrink-0 ml-2" />
+              </div>
+              
+              <p className="text-[#BE5985]/70 text-sm line-clamp-3 leading-relaxed mb-4">
+                {journal.content}
+              </p>
+              
+              <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-1 text-[#BE5985]/60">
+                    <Clock className="h-3 w-3" />
+                    <time>{getRelativeTime(journal.created_at)}</time>
+                  </div>
+                  <div className="flex items-center gap-1 text-[#BE5985]/60">
+                    <BookOpen className="h-3 w-3" />
+                    <span>{wordCount} words</span>
+                  </div>
+                </div>
+                
+                {journal.tags && journal.tags.length > 0 && (
+                  <div className="flex gap-1 max-w-xs overflow-hidden">
+                    {journal.tags.slice(0, 3).map(tag => (
+                      <span
+                        key={tag}
+                        className="px-2 py-1 bg-[#FFB8E0]/40 text-[#BE5985] rounded-full text-xs font-medium border border-[#FFB8E0]/50"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                    {journal.tags.length > 3 && (
+                      <span className="px-2 py-1 bg-[#FFB8E0]/40 text-[#BE5985] rounded-full text-xs font-medium border border-[#FFB8E0]/50">
+                        +{journal.tags.length - 3}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
           
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-3">
-                <h3 className="text-lg font-bold text-[#BE5985] group-hover:text-[#EC7FA9] transition-colors duration-300 truncate">
-                  {journal.title || 'Untitled Entry'}
-                </h3>
-                {moodEmoji && (
-                  <span className="text-2xl group-hover:scale-110 transition-transform duration-300">{moodEmoji}</span>
-                )}
-              </div>
-              <Star className="h-4 w-4 text-[#BE5985]/50 group-hover:text-[#EC7FA9] group-hover:fill-current transition-all duration-300 flex-shrink-0 ml-2" />
-            </div>
-            
-            <p className="text-[#BE5985]/70 text-sm line-clamp-3 leading-relaxed mb-4">
-              {journal.content}
-            </p>
-            
-            <div className="flex items-center justify-between text-xs">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1 text-[#BE5985]/60">
-                  <Clock className="h-3 w-3" />
-                  <time>{getRelativeTime(journal.created_at)}</time>
-                </div>
-                <div className="flex items-center gap-1 text-[#BE5985]/60">
-                  <BookOpen className="h-3 w-3" />
-                  <span>{wordCount} words</span>
-                </div>
-              </div>
-              
-              {journal.tags && journal.tags.length > 0 && (
-                <div className="flex gap-1 max-w-xs overflow-hidden">
-                  {journal.tags.slice(0, 3).map(tag => (
-                    <span
-                      key={tag}
-                      className="px-2 py-1 bg-[#FFB8E0]/40 text-[#BE5985] rounded-full text-xs font-medium border border-[#FFB8E0]/50"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                  {journal.tags.length > 3 && (
-                    <span className="px-2 py-1 bg-[#FFB8E0]/40 text-[#BE5985] rounded-full text-xs font-medium border border-[#FFB8E0]/50">
-                      +{journal.tags.length - 3}
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
+          <div className="flex items-center justify-center gap-2 w-full py-3 bg-gradient-to-r from-[#FFEDFA]/60 to-[#FFB8E0]/40 group-hover:from-[#FFB8E0]/40 group-hover:to-[#EC7FA9]/30 border border-[#FFB8E0]/40 group-hover:border-[#EC7FA9]/50 text-[#BE5985] group-hover:text-[#EC7FA9] font-semibold rounded-2xl transition-all duration-300 group-hover:shadow-lg group-hover:shadow-[#FFB8E0]/30">
+            <BookOpen className="h-4 w-4" />
+            Open
           </div>
         </div>
-        
-        <Link 
-          href={`/dashboard/journal/coach?entry=${journal.id}`}
-          className="flex items-center justify-center gap-2 w-full py-3 bg-gradient-to-r from-[#FFEDFA]/60 to-[#FFB8E0]/40 hover:from-[#FFB8E0]/40 hover:to-[#EC7FA9]/30 border border-[#FFB8E0]/40 hover:border-[#EC7FA9]/50 text-[#BE5985] hover:text-[#EC7FA9] font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-[#FFB8E0]/30 hover:-translate-y-0.5"
-        >
-          <Bot className="h-4 w-4" />
-          Get AI Support
-        </Link>
       </div>
-    </div>
+    </Link>
   )
 }
+

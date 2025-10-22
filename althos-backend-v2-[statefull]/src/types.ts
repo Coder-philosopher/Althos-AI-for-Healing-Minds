@@ -9,6 +9,24 @@ export interface User {
   created_at: Date;
   updated_at: Date;
 }
+export interface JournalCoachRequest {
+  text: string
+  language_pref?: string
+  tone_pref?: string
+}
+
+export interface JournalCoachResponse {
+  empathy: string
+  reframe: string
+  actions: Array<{
+    title: string
+    steps: string[]
+    duration_mins: number
+    category: string
+  }>
+  risk: 'none' | 'low' | 'med' | 'high'
+}
+
 
 export interface RegisterUserRequest {
   id: string;

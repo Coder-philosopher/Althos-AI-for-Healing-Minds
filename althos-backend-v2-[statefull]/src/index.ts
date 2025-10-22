@@ -22,6 +22,7 @@ import {
   MoodDailyRequest,
   ShareRequest
 } from './types';
+import { audioService, SUPPORTED_LANGUAGES } from './services/audio';
 
 const app = express();
 
@@ -244,26 +245,127 @@ app.get('/journal', requireUser, async (req: any, res, next) => {
     next(error);
   }
 });
+// Get single journal entry
+app.get('/journal/:id', requireUser, async (req: any, res, next) => {
+  try {
+    const { id } = req.params;
+    
+    const journal = await db.journals.findById(id, req.userId);
+    
+    if (!journal) {
+      return res.status(404).json({
+        success: false,
+        error: 'Journal entry not found'
+      });
+    }
+    
+    res.json({
+      success: true,
+      data: journal
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Update journal entry
+app.put('/journal/:id', requireUser, async (req: any, res, next) => {
+  try {
+    const { id } = req.params;
+    const { title, content, tags, mood } = req.body;
+    
+    const updated = await db.journals.update(id, req.userId, {
+      title,
+      content,
+      tags,
+      mood_valence: mood?.valence,
+      mood_arousal: mood?.arousal
+    });
+    
+    if (!updated) {
+      return res.status(404).json({
+        success: false,
+        error: 'Journal entry not found'
+      });
+    }
+    
+    res.json({
+      success: true,
+      data: updated
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Delete journal entry
+app.delete('/journal/:id', requireUser, async (req: any, res, next) => {
+  try {
+    const { id } = req.params;
+    
+    const deleted = await db.journals.delete(id, req.userId);
+    
+    if (!deleted) {
+      return res.status(404).json({
+        success: false,
+        error: 'Journal entry not found'
+      });
+    }
+    
+    res.json({
+      success: true,
+      message: 'Journal entry deleted successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 // =================== AI ENDPOINTS ===================
 
 // Journal coaching
 app.post('/ai/journal-coach', requireUser, async (req: any, res, next) => {
   try {
-    const request: JournalCoachRequest = req.body;
+    const { journal_id } = req.body;
     
-    if (!request.text || request.text.trim().length === 0) {
-      throw new AppError('Text is required for coaching', 400);
+    if (!journal_id) {
+      throw new AppError('Journal ID is required', 400);
     }
     
+    // Check if AI response already exists (cache)
+    const existingResponse = await db.journals.getAIResponse(journal_id, req.userId);
+    if (existingResponse) {
+      return res.json({
+        success: true,
+        data: existingResponse,
+        cached: true
+      });
+    }
+    
+    // Fetch the journal entry
+    const journal = await db.journals.findById(journal_id, req.userId);
+    if (!journal) {
+      throw new AppError('Journal entry not found', 404);
+    }
+    
+    // Generate AI response
+    const request: JournalCoachRequest = {
+      text: journal.content,
+      language_pref: 'English',
+      tone_pref: 'warm and supportive'
+    };
+    
     const response = await ai.journalCoach(request);
+    
+    // Store AI response in database
+    await db.journals.saveAIResponse(journal_id, req.userId, response);
     
     // Log high-risk interactions
     if (response.risk === 'high' || response.risk === 'med') {
       await db.query(
         `INSERT INTO alerts (user_id, risk_level, context_text)
          VALUES ($1, $2, $3)`,
-        [req.userId, response.risk, request.text.substring(0, 500)]
+        [req.userId, response.risk, journal.content.substring(0, 500)]
       );
     }
     
@@ -276,13 +378,85 @@ app.post('/ai/journal-coach', requireUser, async (req: any, res, next) => {
     
     res.json({
       success: true,
-      data: response
+      data: response,
+      cached: false
     });
   } catch (error) {
     next(error);
   }
 });
 
+app.post('/ai/journal-audio', requireUser, async (req: any, res, next) => {
+  try {
+    const { journal_id, language } = req.body;
+    
+    if (!journal_id || !language) {
+      throw new AppError('Journal ID and language are required', 400);
+    }
+    
+    // Check cache first
+    const cachedUrl = await db.journals.getAudioCache(journal_id, language);
+    if (cachedUrl) {
+      return res.json({
+        success: true,
+        data: {
+          audioUrl: cachedUrl,
+          language,
+          cached: true,
+        },
+      });
+    }
+    
+    // Get journal and AI response
+    const journal = await db.journals.findById(journal_id, req.userId);
+    if (!journal) {
+      throw new AppError('Journal entry not found', 404);
+    }
+    
+    const aiResponse = await db.journals.getAIResponse(journal_id, req.userId);
+    if (!aiResponse) {
+      throw new AppError('AI response not found. Generate AI support first.', 404);
+    }
+    
+    // Combine AI response text for audio
+    const fullText = `${aiResponse.empathy}\n\n${aiResponse.reframe}\n\nHere are some activities you can try:\n\n${aiResponse.actions.map((action, i) => `${i + 1}. ${action.title}: ${action.steps.join('. ')}`).join('\n\n')}`;
+    
+    // Generate and cache audio
+    const result = await audioService.generateAndCacheAudio({
+      text: fullText,
+      targetLanguage: language,
+      journalId: journal_id,
+    });
+    
+    // Save to cache
+    await db.journals.saveAudioCache(journal_id, language, result.audioUrl);
+    
+    await db.logAccess({
+      user_id: req.userId,
+      action: 'ai_audio_generation',
+      resource: 'ai',
+      ip_address: req.ip,
+    });
+    
+    res.json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Add route to get supported languages
+app.get('/ai/supported-languages', (req, res) => {
+  res.json({
+    success: true,
+    data: Object.entries(SUPPORTED_LANGUAGES).map(([code, config]) => ({
+      code,
+      name: config.name,
+    })),
+  });
+});
 // Weekly summary
 app.post('/ai/weekly-summary', requireUser, async (req: any, res, next) => {
   try {

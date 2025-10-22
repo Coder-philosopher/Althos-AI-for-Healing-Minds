@@ -23,8 +23,7 @@ const navigation = [
   { name: 'Tests', href: '/dashboard/tests', icon: TestTube2, badge: 'New', color: 'from-[#DB5F9A]/20 to-[#C74585]/20' },
   { name: 'Wellness', href: '/dashboard/wellness', icon: Brain, badge: null, color: 'from-[#E879B9]/20 to-[#F09FCA]/20' },
   { name: 'Share', href: '/dashboard/share', icon: Share2, badge: null, color: 'from-[#F8A5C2]/20 to-[#DB5F9A]/20' },
-  { name: 'Profile', href: '/dashboard/profile', icon: User, badge: null, color: 'from-[#DB5F9A]/20 to-[#E879B9]/20' },
-  { name: 'Settings', href: '/dashboard/settings', icon: Settings, badge: null, color: 'from-[#C74585]/20 to-[#DB5F9A]/20' },
+  { name: 'Profile Settings', href: '/dashboard/profile', icon: User, badge: null, color: 'from-[#DB5F9A]/20 to-[#E879B9]/20' },
 ]
 
 interface SidebarProps {
