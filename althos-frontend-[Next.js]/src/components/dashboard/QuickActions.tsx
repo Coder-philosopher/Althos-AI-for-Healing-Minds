@@ -4,7 +4,7 @@ import { PenTool, Smile, TestTube2, Share2, Plus, TrendingUp, Sparkles, ArrowUpR
 import { Montserrat } from 'next/font/google'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
-
+//fixed
 const montserrat = Montserrat({ 
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
