@@ -1,0 +1,154 @@
+{
+  "en": {
+    "nav": {
+      "home": "Home",
+      "dashboard": "Dashboard",
+      "journal": "Journal",
+      "mood": "Mood",
+      "help": "Help",
+      "health": "Understand Mental Health",
+      "signin": "Sign In",
+      "signup": "Get Started Free",
+      "settings": "Settings",
+      "profile": "Profile"
+    },
+    "dashboard": {
+      "welcome": "Welcome back",
+      "goodMorning": "Good morning",
+      "goodAfternoon": "Good afternoon",
+      "goodEvening": "Good evening",
+      "moodCheck": "Quick Mood Check",
+      "recentJournals": "Recent Journals",
+      "weeklyScore": "This Week",
+      "quickActions": "Quick Actions",
+      "reminders": "Upcoming Reminders",
+      "howAreYou": "How are you feeling?",
+      "energyLevel": "Energy Level"
+    },
+    "buttons": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "submit": "Submit",
+      "delete": "Delete",
+      "edit": "Edit",
+      "viewAll": "View All",
+      "learnMore": "Learn More",
+      "getStarted": "Get Started",
+      "signIn": "Sign In",
+      "signOut": "Sign Out",
+      "complete": "Mark Complete",
+      "remove": "Remove"
+    },
+    "common": {
+      "loading": "Loading...",
+      "error": "Something went wrong",
+      "success": "Success!",
+      "tryAgain": "Try Again",
+      "search": "Search...",
+      "close": "Close",
+      "open": "Open",
+      "menu": "Menu"
+    },
+    "mood": {
+      "veryLow": "Very Low",
+      "low": "Low",
+      "neutral": "Neutral",
+      "good": "Good",
+      "veryGood": "Very Good",
+      "calm": "Calm",
+      "balanced": "Balanced",
+      "energized": "Energized",
+      "recordMood": "Record My Mood"
+    },
+    "journal": {
+      "newEntry": "Write New Entry",
+      "title": "Title",
+      "content": "Write your thoughts...",
+      "save": "Save Entry",
+      "noEntries": "No journal entries yet"
+    },
+    "language": {
+      "selectLanguage": "Select Language",
+      "searchLanguage": "Search languages...",
+      "changeLanguage": "Change Language",
+      "translating": "Translating...",
+      "translatePage": "Translate Page"
+    }
+  },
+  "hi": {
+    "nav": {
+      "home": "होम",
+      "dashboard": "डैशबोर्ड",
+      "journal": "जर्नल",
+      "mood": "मूड",
+      "help": "मदद",
+      "health": "मानसिक स्वास्थ्य को समझें",
+      "signin": "साइन इन करें",
+      "signup": "मुफ्त में शुरू करें",
+      "settings": "सेटिंग्स",
+      "profile": "प्रोफाइल"
+    },
+    "dashboard": {
+      "welcome": "वापसी पर स्वागत है",
+      "goodMorning": "सुप्रभात",
+      "goodAfternoon": "शुभ दोपहर",
+      "goodEvening": "शुभ संध्या",
+      "moodCheck": "त्वरित मूड जांच",
+      "recentJournals": "हाल की जर्नल",
+      "weeklyScore": "इस सप्ताह",
+      "quickActions": "त्वरित कार्रवाई",
+      "reminders": "आगामी रिमाइंडर",
+      "howAreYou": "आप कैसा महसूस कर रहे हैं?",
+      "energyLevel": "ऊर्जा स्तर"
+    },
+    "buttons": {
+      "save": "सहेजें",
+      "cancel": "रद्द करें",
+      "submit": "जमा करें",
+      "delete": "हटाएं",
+      "edit": "संपादित करें",
+      "viewAll": "सभी देखें",
+      "learnMore": "और जानें",
+      "getStarted": "शुरू करें",
+      "signIn": "साइन इन करें",
+      "signOut": "साइन आउट करें",
+      "complete": "पूर्ण के रूप में चिह्नित करें",
+      "remove": "हटाएं"
+    },
+    "common": {
+      "loading": "लोड हो रहा है...",
+      "error": "कुछ गलत हो गया",
+      "success": "सफलता!",
+      "tryAgain": "पुनः प्रयास करें",
+      "search": "खोजें...",
+      "close": "बंद करें",
+      "open": "खोलें",
+      "menu": "मेनू"
+    },
+    "mood": {
+      "veryLow": "बहुत कम",
+      "low": "कम",
+      "neutral": "तटस्थ",
+      "good": "अच्छा",
+      "veryGood": "बहुत अच्छा",
+      "calm": "शांत",
+      "balanced": "संतुलित",
+      "energized": "ऊर्जावान",
+      "recordMood": "मेरा मूड रिकॉर्ड करें"
+    },
+    "journal": {
+      "newEntry": "नई एंट्री लिखें",
+      "title": "शीर्षक",
+      "content": "अपने विचार लिखें...",
+      "save": "एंट्री सहेजें",
+      "noEntries": "अभी तक कोई जर्नल एंट्री नहीं"
+    },
+    "language": {
+      "selectLanguage": "भाषा चुनें",
+      "searchLanguage": "भाषाएं खोजें...",
+      "changeLanguage": "भाषा बदलें",
+      "translating": "अनुवाद हो रहा है...",
+      "translatePage": "पृष्ठ का अनुवाद करें"
+    }
+  }
+}

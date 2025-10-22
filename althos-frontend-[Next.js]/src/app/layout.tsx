@@ -2,9 +2,9 @@ import './globals.css'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { AuthProvider } from '@/lib/auth'
-
+import { FloatingLanguageSelector } from '@/components/FloatingLanguageSelector'
 const inter = Inter({ subsets: ['latin'] })
-
+import { PageTranslator } from '@/components/PageTranslator'
 export const metadata: Metadata = {
   title: 'Althos - Mental Wellness Companion',
   description: 'AI-powered mental health support for Gen-Z and youth. Track moods, journal, and grow mentally with our smart tools.',
@@ -52,9 +52,12 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       </head>
       <body className={`${inter.className} h-full bg-bg`}>
+         <PageTranslator excludeSelectors={['[data-logo]', '.althos-logo']}>
         <AuthProvider>
           {children}
         </AuthProvider>
+        </PageTranslator>
+          <FloatingLanguageSelector />
       </body>
     </html>
   )

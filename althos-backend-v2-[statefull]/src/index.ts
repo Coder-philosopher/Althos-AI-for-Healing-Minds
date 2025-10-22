@@ -37,6 +37,9 @@ app.use(cors({
 
 app.use(express.json());
 
+
+
+
 // Request logging
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
@@ -86,6 +89,8 @@ const errorHandler = (error: any, req: any, res: any, next: any) => {
 };
 
 // =================== ROUTES ===================
+const translateRouter = require('../routes/translate');
+app.use('/api', translateRouter);
 
 // Health check
 app.get('/health', async (req, res, next) => {

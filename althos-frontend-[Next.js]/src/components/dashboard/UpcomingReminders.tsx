@@ -1,11 +1,11 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { Clock, Bell, Heart, Calendar, CheckCircle2, Star, AlertCircle, Coffee } from 'lucide-react'
 import { Montserrat } from 'next/font/google'
+import { cn } from '@/lib/utils'
 
 const montserrat = Montserrat({ 
   subsets: ['latin'],
-  weight: ['600'],
+  weight: ['400', '500', '600', '700'],
 })
 
 interface Reminder {
@@ -20,9 +20,10 @@ interface Reminder {
 
 export function UpcomingReminders() {
   const [reminders, setReminders] = useState<Reminder[]>([])
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    // Mock reminders - replace with actual API
+    setMounted(true)
     const mockReminders: Reminder[] = [
       {
         id: '1',
@@ -47,6 +48,14 @@ export function UpcomingReminders() {
         time: 'In 2 hours',
         type: 'selfcare',
         priority: 'low'
+      },
+      {
+        id: '4',
+        title: 'Gratitude Practice',
+        description: 'List three things you\'re grateful for today',
+        time: 'Before bed',
+        type: 'journal',
+        priority: 'medium'
       }
     ]
     setReminders(mockReminders)
@@ -55,36 +64,40 @@ export function UpcomingReminders() {
   const getTypeConfig = (type: Reminder['type']) => {
     const configs = {
       mood: {
-        icon: Heart,
-        gradient: 'from-rose-400 to-pink-500',
-        bgColor: 'from-rose-50 to-pink-100',
-        textColor: 'text-rose-700',
+        
+        gradient: 'from-rose-400 via-pink-500 to-rose-500',
+        hoverGradient: 'from-rose-500 via-pink-600 to-rose-600',
+        bgGradient: 'from-rose-50 via-pink-50 to-rose-100',
         iconColor: 'text-rose-600',
-        shadowColor: 'shadow-rose-200'
+        borderColor: 'border-rose-200',
+        glowColor: 'shadow-rose-300'
       },
       journal: {
-        icon: Calendar,
-        gradient: 'from-blue-400 to-indigo-500',
-        bgColor: 'from-blue-50 to-indigo-100',
-        textColor: 'text-blue-700',
+        
+        gradient: 'from-blue-400 via-indigo-500 to-blue-500',
+        hoverGradient: 'from-blue-500 via-indigo-600 to-blue-600',
+        bgGradient: 'from-blue-50 via-indigo-50 to-blue-100',
         iconColor: 'text-blue-600',
-        shadowColor: 'shadow-blue-200'
+        borderColor: 'border-blue-200',
+        glowColor: 'shadow-blue-300'
       },
       selfcare: {
-        icon: Coffee,
-        gradient: 'from-purple-400 to-violet-500',
-        bgColor: 'from-purple-50 to-violet-100',
-        textColor: 'text-purple-700',
+       
+        gradient: 'from-purple-400 via-violet-500 to-purple-500',
+        hoverGradient: 'from-purple-500 via-violet-600 to-purple-600',
+        bgGradient: 'from-purple-50 via-violet-50 to-purple-100',
         iconColor: 'text-purple-600',
-        shadowColor: 'shadow-purple-200'
+        borderColor: 'border-purple-200',
+        glowColor: 'shadow-purple-300'
       },
       appointment: {
-        icon: Clock,
-        gradient: 'from-orange-400 to-amber-500',
-        bgColor: 'from-orange-50 to-amber-100',
-        textColor: 'text-orange-700',
+        
+        gradient: 'from-orange-400 via-amber-500 to-orange-500',
+        hoverGradient: 'from-orange-500 via-amber-600 to-orange-600',
+        bgGradient: 'from-orange-50 via-amber-50 to-orange-100',
         iconColor: 'text-orange-600',
-        shadowColor: 'shadow-orange-200'
+        borderColor: 'border-orange-200',
+        glowColor: 'shadow-orange-300'
       }
     }
     return configs[type]
@@ -92,9 +105,24 @@ export function UpcomingReminders() {
 
   const getPriorityConfig = (priority: Reminder['priority']) => {
     const configs = {
-      high: { icon: AlertCircle, color: 'text-red-500', bg: 'bg-red-100' },
-      medium: { icon: Clock, color: 'text-yellow-500', bg: 'bg-yellow-100' },
-      low: { icon: Star, color: 'text-green-500', bg: 'bg-green-100' }
+      high: { 
+        color: 'text-red-600', 
+        bg: 'bg-gradient-to-br from-red-100 to-rose-100',
+        border: 'border-red-300',
+        label: 'High'
+      },
+      medium: { 
+        color: 'text-amber-600', 
+        bg: 'bg-gradient-to-br from-amber-100 to-yellow-100',
+        border: 'border-amber-300',
+        label: 'Medium'
+      },
+      low: { 
+        color: 'text-emerald-600', 
+        bg: 'bg-gradient-to-br from-emerald-100 to-green-100',
+        border: 'border-emerald-300',
+        label: 'Low'
+      }
     }
     return configs[priority || 'medium']
   }
@@ -105,139 +133,223 @@ export function UpcomingReminders() {
     ))
   }
 
+  const removeReminder = (id: string) => {
+    setReminders(prev => prev.filter(reminder => reminder.id !== id))
+  }
+
+  if (!mounted) return null
+
   if (reminders.length === 0) {
     return (
-      <div className={`${montserrat.className} p-6 rounded-3xl bg-white/90 backdrop-blur-md border border-[#FFB8E0]/40 shadow-xl shadow-[#FFB8E0]/20`}>
-        <h3 className="text-lg font-bold text-[#BE5985] mb-4 flex items-center gap-2">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-[#EC7FA9] to-[#BE5985] shadow-lg shadow-[#EC7FA9]/30">
-            <Bell className="h-4 w-4 text-white" />
+      <div className={`${montserrat.className} relative group w-full`}>
+        <div className="p-8 rounded-3xl bg-gradient-to-br from-white via-[#FFF8FB] to-[#FFF5F9] backdrop-blur-xl border-2 border-[#F8A5C2]/50 shadow-2xl shadow-[#E879B9]/20">
+          <h3 className="text-2xl font-bold text-[#C74585] mb-8 flex items-center gap-3">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-green-500 rounded-2xl blur-xl opacity-40 animate-pulse" />
+              <div className="relative p-3 rounded-2xl bg-gradient-to-br from-emerald-100 to-green-100 shadow-xl border-2 border-white/50">
+              </div>
+            </div>
+            Reminders
+          </h3>
+          
+          <div className="text-center py-12">
+            <div className="relative inline-block mb-6">
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-300/30 to-green-300/20 rounded-full blur-3xl animate-pulse" />
+              <div className="relative p-8 rounded-full bg-gradient-to-br from-emerald-100 via-green-50 to-teal-100 border-2 border-emerald-200 shadow-xl">
+              </div>
+            </div>
+            <h4 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent mb-3">
+              All Caught Up! ✨
+            </h4>
+            <p className="text-[#A03768]/70 leading-relaxed max-w-xs mx-auto text-lg">
+              No reminders right now. Enjoy your peaceful moment.
+            </p>
           </div>
-          Reminders
-        </h3>
-        <div className="text-center py-8">
-          <div className="p-4 rounded-full bg-gradient-to-br from-green-100 to-emerald-200 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-            <CheckCircle2 className="h-8 w-8 text-green-600" />
-          </div>
-          <h4 className="font-semibold text-[#BE5985] mb-2">All Caught Up! ✨</h4>
-          <p className="text-[#BE5985]/70 text-sm leading-relaxed">
-            No reminders right now. Enjoy your peaceful moment.
-          </p>
         </div>
       </div>
     )
   }
 
+  const pendingCount = reminders.filter(r => !r.completed).length
+
   return (
-    <div className={`${montserrat.className} p-6 rounded-3xl bg-white/90 backdrop-blur-md border border-[#FFB8E0]/40 shadow-xl shadow-[#FFB8E0]/20 relative overflow-hidden group hover:shadow-2xl hover:shadow-[#EC7FA9]/25 transition-all duration-500`}>
-      {/* Floating background elements */}
-      <div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-br from-[#FFB8E0]/20 to-[#EC7FA9]/10 rounded-full blur-xl group-hover:scale-110 transition-transform duration-700" />
+    <div className={`${montserrat.className} relative group w-full`}>
+      {/* Animated background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#FFF5F9] via-[#FFEBF3] to-[#FFF0F6] rounded-3xl blur-2xl opacity-50 group-hover:opacity-70 transition-opacity duration-700" />
       
-      <div className="relative z-10">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-bold text-[#BE5985] flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-[#EC7FA9] to-[#BE5985] shadow-lg shadow-[#EC7FA9]/30">
-              <Bell className="h-4 w-4 text-white" />
-            </div>
-            Reminders
-          </h3>
-          <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-[#FFEDFA]/60 border border-[#FFB8E0]/40">
-            <div className="h-2 w-2 bg-[#EC7FA9] rounded-full animate-pulse"></div>
-            <span className="text-xs font-medium text-[#BE5985]">{reminders.filter(r => !r.completed).length} pending</span>
-          </div>
+      <div className="relative p-8 rounded-3xl bg-gradient-to-br from-white/95 via-white/90 to-[#FFF5F9]/80 backdrop-blur-xl border-2 border-[#F8A5C2]/50 shadow-2xl shadow-[#E879B9]/20 overflow-hidden transition-all duration-500 group-hover:shadow-[#E879B9]/30">
+        {/* Mesh gradient overlay */}
+        <div className="absolute inset-0 opacity-20 pointer-events-none">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-[#E879B9]/30 to-transparent rounded-full mix-blend-multiply filter blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tl from-[#F8A5C2]/20 to-transparent rounded-full mix-blend-multiply filter blur-3xl" />
         </div>
         
-        <div className="space-y-4">
-          {reminders.map((reminder, index) => {
-            const config = getTypeConfig(reminder.type)
-            const priorityConfig = getPriorityConfig(reminder.priority)
-            const IconComponent = config.icon
-
-            return (
-              <div
-                key={reminder.id}
-                className={`group/reminder p-5 rounded-2xl border transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 ${
-                  reminder.completed 
-                    ? 'bg-gray-50/80 border-gray-200/50 opacity-75' 
-                    : `bg-gradient-to-br ${config.bgColor}/40 border-[#FFB8E0]/30 hover:border-[#EC7FA9]/50`
-                }`}
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <div className="flex items-start gap-4">
-                  <div className={`relative flex-shrink-0 ${reminder.completed ? 'opacity-60' : ''}`}>
-                    {reminder.completed ? (
-                      <div className="p-3 rounded-xl bg-green-100 shadow-inner">
-                        <CheckCircle2 className="h-5 w-5 text-green-600" />
-                      </div>
-                    ) : (
-                      <div className={`p-3 rounded-xl bg-gradient-to-br ${config.gradient} shadow-lg ${config.shadowColor}/50 group-hover/reminder:scale-110 group-hover/reminder:rotate-12 transition-all duration-300`}>
-                        <IconComponent className="h-5 w-5 text-white" />
-                      </div>
-                    )}
-                    
-                    {/* Priority indicator */}
-                    {!reminder.completed && reminder.priority && (
-                      <div className={`absolute -top-1 -right-1 p-1 rounded-full ${priorityConfig.bg} shadow-sm`}>
-                        <priorityConfig.icon className={`h-2 w-2 ${priorityConfig.color}`} />
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className={`font-semibold transition-colors duration-300 ${
-                        reminder.completed 
-                          ? 'text-gray-500 line-through' 
-                          : 'text-[#BE5985] group-hover/reminder:text-[#EC7FA9]'
-                      }`}>
-                        {reminder.title}
-                      </h4>
-                      <div className="flex items-center gap-2">
-                        <time className={`text-xs font-medium px-2 py-1 rounded-full transition-colors duration-300 ${
-                          reminder.completed 
-                            ? 'text-gray-400 bg-gray-100' 
-                            : 'text-[#BE5985] bg-[#FFEDFA]/60'
-                        }`}>
-                          {reminder.time}
-                        </time>
-                      </div>
-                    </div>
-                    
-                    <p className={`text-sm leading-relaxed mb-3 transition-colors duration-300 ${
-                      reminder.completed 
-                        ? 'text-gray-400' 
-                        : 'text-[#BE5985]/70'
-                    }`}>
-                      {reminder.description}
-                    </p>
-                    
-                    {!reminder.completed && (
-                      <div className="flex items-center justify-between">
-                        <button
-                          onClick={() => markCompleted(reminder.id)}
-                          className="text-xs font-medium text-[#EC7FA9] hover:text-[#BE5985] px-3 py-1 rounded-full bg-[#FFEDFA]/60 hover:bg-[#FFB8E0]/40 border border-[#FFB8E0]/40 hover:border-[#EC7FA9]/50 transition-all duration-300 hover:shadow-md hover:shadow-[#FFB8E0]/30"
-                        >
-                          Mark Complete
-                        </button>
-                        
-                        <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          reminder.priority === 'high' ? 'bg-red-100 text-red-700' :
-                          reminder.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                          'bg-green-100 text-green-700'
-                        }`}>
-                          {reminder.priority} priority
-                        </div>
-                      </div>
-                    )}
-                  </div>
+        <div className="relative z-10">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-[#E879B9] to-[#DB5F9A] rounded-2xl blur-xl opacity-40 animate-pulse" />
+                <div className="relative p-3 rounded-2xl bg-gradient-to-br from-[#E879B9] to-[#DB5F9A] shadow-xl border-2 border-white/50">
                 </div>
               </div>
-            )
-          })}
-        </div>
+              <div>
+                <h3 className="text-2xl font-bold text-[#C74585]">Upcoming Reminders</h3>
+                <p className="text-sm text-[#A03768]/60 font-medium">Your scheduled wellness tasks</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-[#F8A5C2]/30 to-[#E879B9]/20 border-2 border-[#E879B9]/30 shadow-lg">
+              <div className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#E879B9] opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-gradient-to-br from-[#E879B9] to-[#DB5F9A]"></span>
+              </div>
+              <span className="text-sm font-bold text-[#C74585]">{pendingCount} pending</span>
+            </div>
+          </div>
+          
+          {/* Reminders grid - 2 columns layout */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            {reminders.map((reminder, index) => {
+              const config = getTypeConfig(reminder.type)
+              const priorityConfig = getPriorityConfig(reminder.priority)
+              
 
-        <button className="w-full px-4 py-3 mt-6 bg-gradient-to-r from-[#FFEDFA]/60 to-[#FFB8E0]/40 hover:from-[#FFB8E0]/40 hover:to-[#EC7FA9]/30 border border-[#FFB8E0]/40 hover:border-[#EC7FA9]/50 text-[#BE5985] hover:text-[#EC7FA9] font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-[#FFB8E0]/30 hover:-translate-y-0.5 text-sm">
-          View All Reminders
-        </button>
+              return (
+                <div
+                  key={reminder.id}
+                  className={cn(
+                    "group/reminder relative rounded-2xl transition-all duration-500",
+                    reminder.completed && "opacity-60"
+                  )}
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  {/* Card glow effect */}
+                  {!reminder.completed && (
+                    <div className={cn(
+                      "absolute -inset-1 rounded-2xl blur-xl opacity-0 group-hover/reminder:opacity-40 transition-opacity duration-500",
+                      `bg-gradient-to-r ${config.gradient}`
+                    )} />
+                  )}
+
+                  <div className={cn(
+                    "relative p-5 rounded-2xl border-2 transition-all duration-500 h-full",
+                    reminder.completed 
+                      ? "bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200" 
+                      : `bg-gradient-to-br ${config.bgGradient} ${config.borderColor} hover:shadow-xl hover:-translate-y-1`
+                  )}>
+                    <div className="flex flex-col h-full">
+                      {/* Top section - Icon and Title */}
+                      <div className="flex items-start gap-3 mb-3">
+                        {/* Icon */}
+                        <div className="relative flex-shrink-0">
+                          {reminder.completed ? (
+                            <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-100 to-green-100 shadow-lg border-2 border-emerald-200">
+                            </div>
+                          ) : (
+                            <>
+                              <div className={cn(
+                                "absolute inset-0 rounded-xl blur-lg transition-all duration-500",
+                                `bg-gradient-to-br ${config.gradient}`,
+                                "opacity-0 group-hover/reminder:opacity-60"
+                              )} />
+                              <div className={cn(
+                                "relative p-3 rounded-xl shadow-xl border-2 border-white/50 transition-all duration-500",
+                                `bg-gradient-to-br ${config.gradient}`,
+                                "group-hover/reminder:scale-110 group-hover/reminder:rotate-6"
+                              )}>
+                              </div>
+                            </>
+                          )}
+                          
+                          {/* Priority indicator */}
+                          {!reminder.completed && reminder.priority && (
+                            <div className={cn(
+                              "absolute -top-1 -right-1 p-1 rounded-full shadow-lg border-2 border-white",
+                              priorityConfig.bg,
+                              priorityConfig.border
+                            )}>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Title and time */}
+                        <div className="flex-1 min-w-0">
+                          <h4 className={cn(
+                            "font-bold text-base mb-1 transition-colors duration-300 line-clamp-1",
+                            reminder.completed 
+                              ? "text-gray-500 line-through" 
+                              : "text-[#C74585] group-hover/reminder:text-[#E879B9]"
+                          )}>
+                            {reminder.title}
+                          </h4>
+                          
+                          {/* Time badge */}
+                          <div className={cn(
+                            "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold shadow-sm border",
+                            reminder.completed 
+                              ? "text-gray-400 bg-gray-100 border-gray-200" 
+                              : "text-[#C74585] bg-white/80 border-[#E879B9]/30"
+                          )}>
+                            {reminder.time}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Description */}
+                      <p className={cn(
+                        "text-sm leading-relaxed mb-4 flex-1",
+                        reminder.completed ? "text-gray-400" : "text-[#A03768]/70"
+                      )}>
+                        {reminder.description}
+                      </p>
+                      
+                      {/* Actions */}
+                      {!reminder.completed && (
+                        <div className="flex items-center gap-2 pt-3 border-t border-[#F8A5C2]/30">
+                          <button
+                            onClick={() => markCompleted(reminder.id)}
+                            className="group/btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-bold text-xs shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 border border-white/30"
+                          >
+                            Complete
+                          </button>
+                          
+                          <button
+                            onClick={() => removeReminder(reminder.id)}
+                            className="p-1.5 rounded-lg bg-white/60 hover:bg-rose-100 text-rose-500 hover:text-rose-600 transition-colors border border-rose-200 hover:border-rose-300"
+                            title="Remove reminder"
+                          >
+                          </button>
+
+                          {/* Priority badge */}
+                          <div className={cn(
+                            "ml-auto px-2.5 py-1 rounded-full text-xs font-bold border",
+                            priorityConfig.bg,
+                            priorityConfig.border,
+                            priorityConfig.color
+                          )}>
+                            <div className="flex items-center gap-1">
+                              {priorityConfig.label}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* View all button */}
+          <button className="w-full group/button relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-[#E879B9] via-[#DB5F9A] to-[#F8A5C2] rounded-2xl blur-lg opacity-60 group-hover/button:opacity-100 transition-opacity" />
+            <div className="relative px-6 py-4 rounded-2xl bg-gradient-to-r from-[#F8A5C2]/40 to-[#E879B9]/30 hover:from-[#E879B9]/40 hover:to-[#DB5F9A]/40 border-2 border-[#E879B9]/40 hover:border-[#DB5F9A]/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
+              <div className="flex items-center justify-center gap-2 text-[#C74585] hover:text-[#DB5F9A] font-bold">
+                View All Reminders
+              </div>
+            </div>
+          </button>
+        </div>
       </div>
     </div>
   )

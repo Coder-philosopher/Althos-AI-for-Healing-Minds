@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       const response = await getProfile(userId)
-      console.log(response.data);
+      // console.log(response.data);
       setUser(response.data)
     } catch (error) {
       console.error('Failed to get user profile:', error)

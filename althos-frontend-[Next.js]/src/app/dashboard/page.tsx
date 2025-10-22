@@ -37,7 +37,6 @@ export default function Dashboard() {
         <div className="space-y-6">
           <WeeklyScore />
           <QuickActions />
-          <UpcomingReminders />
         </div>
       </div>
     </div>

@@ -187,3 +187,30 @@ export const getShareAnalytics = async (userId: string, shareId: string) => {
     headers: { 'X-User-Id': userId },
   })
 }
+
+// -----------------------
+// Translation
+// -----------------------
+// -----------------------
+// Translation
+// -----------------------
+export const translateText = async (
+  text: string | string[], 
+  targetLanguage: string,
+  sourceLanguage: string = 'en'
+) => {
+  // This will call http://localhost:8080/api/translate
+  return apiCall('/api/translate', {
+    method: 'POST',
+    body: JSON.stringify({
+      text,
+      targetLanguage,
+      sourceLanguage,
+    }),
+  })
+}
+
+export const getSupportedLanguages = async () => {
+  return apiCall('/api/languages')
+}
+
