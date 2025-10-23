@@ -12,13 +12,26 @@ const utils_1 = require("./utils");
 const audio_1 = require("./services/audio");
 const app = (0, express_1.default)();
 // Middleware
+const allowedOrigins = [
+    "https://althos.nitrr.in",
+    "http://localhost:3000",
+];
 app.use((0, cors_1.default)({
-    origin: process.env.NODE_ENV === 'development'
-        ? 'http://localhost:3000'
-        : 'https://althos.nitrr.in',
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'X-User-Id', 'Authorization'],
-    credentials: true
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps, curl, or same-origin)
+        if (!origin)
+            return callback(null, true);
+        if (allowedOrigins.includes(origin)) {
+            callback(null, true);
+        }
+        else {
+            console.warn("Blocked by CORS:", origin);
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "X-User-Id", "Authorization"],
+    credentials: true,
 }));
 app.use(express_1.default.json());
 // Request logging

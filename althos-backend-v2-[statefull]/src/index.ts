@@ -27,14 +27,29 @@ import { audioService, SUPPORTED_LANGUAGES } from './services/audio';
 const app = express();
 
 // Middleware
-app.use(cors({
-  origin: process.env.NODE_ENV === 'development'
-    ? 'http://localhost:3000'
-    : 'https://althos.nitrr.in',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'X-User-Id', 'Authorization'],
-  credentials: true
-}));
+const allowedOrigins = [
+  "https://althos.nitrr.in",
+  "http://localhost:3000",
+];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl, or same-origin)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.warn("Blocked by CORS:", origin);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "X-User-Id", "Authorization"],
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 
