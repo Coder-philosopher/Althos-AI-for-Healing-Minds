@@ -23,52 +23,105 @@ function getTTSClient() {
     }
     return ttsClient;
 }
-async function callGemini(prompt, systemPrompt) {
-    if (!config_1.default.enableAI || !config_1.default.gcpProjectId) {
-        return "AI is currently disabled. This is a mock response for development.";
+async function callGemini(userPrompt, systemPrompt) {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${config_1.default.geminiApiKey}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            contents: [{
+                    parts: [{
+                            text: `${systemPrompt}\n\n${userPrompt}`
+                        }]
+                }],
+            generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 1024,
+            }
+        })
+    });
+    if (!response.ok) {
+        const error = await response.json();
+        console.error('Gemini API Error:', error);
+        throw new Error(`Gemini API error: ${JSON.stringify(error)}`);
     }
-    try {
-        const client = getAIClient();
-        const model = `projects/${config_1.default.gcpProjectId}/locations/${config_1.default.gcpLocation}/publishers/google/models/${config_1.default.geminiModel}`;
-        const contents = [
-            ...(systemPrompt ? [{ role: 'system', parts: [{ text: systemPrompt }] }] : []),
-            { role: 'user', parts: [{ text: prompt }] },
-        ];
-        const [response] = await client.generateContent({
-            model,
-            contents,
-        });
-        const candidates = response?.candidates || [];
-        for (const candidate of candidates) {
-            const parts = candidate?.content?.parts || [];
-            const text = parts.map(p => p?.text || '').join(' ').trim();
-            if (text)
-                return text;
-        }
-        return "AI response generated successfully.";
+    const data = await response.json();
+    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+        throw new Error('Invalid response from Gemini API');
     }
-    catch (error) {
-        console.error('AI call failed:', error);
-        return "I'm here to help, but I'm having trouble right now. Please try again.";
-    }
+    return data.candidates[0].content.parts[0].text;
 }
 exports.ai = {
     async journalCoach(request) {
         const systemPrompt = `You are an empathetic mental health peer supporter for Indian youth. 
-    Provide validation, gentle reframing, and practical micro-actions. 
-    You are NOT a therapist. Always remind users to seek professional help for serious concerns.
-    
-    Response format:
-    1. EMPATHY: Validate their feelings (2-3 sentences)
-    2. REFRAME: Offer gentle perspective (1-2 sentences)  
-    3. ACTIONS: Two specific 10-20 minute activities
-    
-    Keep language warm, culturally sensitive, and youth-friendly.`;
+Provide validation, gentle reframing, and practical micro-actions. 
+You are NOT a therapist. Always remind users to seek professional help for serious concerns.
+
+IMPORTANT: Respond ONLY with valid JSON in this exact format (no markdown, no code blocks):
+{
+  "empathy": "2-3 sentences validating their feelings",
+  "reframe": "1-2 sentences offering gentle perspective",
+  "actions": [
+    {
+      "title": "Action name",
+      "steps": ["step1", "step2", "step3"],
+      "duration_mins": 5,
+      "category": "grounding"
+    },
+    {
+      "title": "Action name",
+      "steps": ["step1", "step2", "step3"],
+      "duration_mins": 10,
+      "category": "cognitive"
+    }
+  ]
+}
+
+Keep language warm, culturally sensitive, and youth-friendly.`;
         const userPrompt = `User's journal entry: "${request.text}"
-    Language preference: ${request.language_pref || 'English'}
-    Tone preference: ${request.tone_pref || 'warm and supportive'}`;
-        const response = await callGemini(userPrompt, systemPrompt);
-        // Simple risk assessment
+Language preference: ${request.language_pref || 'English'}
+Tone preference: ${request.tone_pref || 'warm and supportive'}
+
+Respond ONLY with the JSON format specified above.`;
+        try {
+            const responseText = await callGemini(userPrompt, systemPrompt);
+            // Remove markdown code blocks if present
+            let cleanedText = responseText.trim();
+            if (cleanedText.startsWith('```json')) {
+                cleanedText = cleanedText.replace(/```json\s*/g, '').replace(/```$/, '').trim();
+            }
+            else if (cleanedText.startsWith('```')) {
+                cleanedText = cleanedText.replace(/```/g, '').trim();
+            }
+            // Try to parse JSON response
+            const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+                const parsed = JSON.parse(jsonMatch[0]);
+                // Risk assessment
+                const text = request.text.toLowerCase();
+                const highRisk = ['suicide', 'kill myself', 'end it all', 'better off dead', 'want to die'];
+                const medRisk = ['hopeless', 'worthless', 'give up', "can't go on", 'no point'];
+                const lowRisk = ['stressed', 'anxious', 'sad', 'worried', 'overwhelmed', 'depressed'];
+                let risk = 'none';
+                if (highRisk.some(keyword => text.includes(keyword)))
+                    risk = 'high';
+                else if (medRisk.some(keyword => text.includes(keyword)))
+                    risk = 'med';
+                else if (lowRisk.some(keyword => text.includes(keyword)))
+                    risk = 'low';
+                return {
+                    empathy: parsed.empathy || parsed.EMPATHY || '',
+                    reframe: parsed.reframe || parsed.REFRAME || '',
+                    actions: parsed.actions || parsed.ACTIONS || [],
+                    risk,
+                };
+            }
+        }
+        catch (error) {
+            console.error('Failed to parse AI response:', error);
+        }
+        // Fallback response if parsing fails
         const text = request.text.toLowerCase();
         const highRisk = ['suicide', 'kill myself', 'end it all', 'better off dead'];
         const medRisk = ['hopeless', 'worthless', 'give up', "can't go on"];
@@ -80,24 +133,37 @@ exports.ai = {
             risk = 'med';
         else if (lowRisk.some(keyword => text.includes(keyword)))
             risk = 'low';
-        // Parse response or provide fallback
-        const empathy = "I hear that you're sharing something important, and I want you to know that your feelings are completely valid.";
-        const reframe = "Sometimes difficult moments can feel overwhelming, but they're also temporary and can lead to growth.";
-        const actions = [
-            {
-                title: "5-Minute Breathing",
-                steps: ["Find a quiet spot", "Breathe in for 4 counts", "Hold for 2 counts", "Exhale for 6 counts", "Repeat for 5 minutes"],
-                duration_mins: 5,
-                category: "grounding"
-            },
-            {
-                title: "Three Good Things",
-                steps: ["Think of 3 positive moments from today", "Write each one down", "Note why each was meaningful"],
-                duration_mins: 10,
-                category: "cognitive"
-            }
-        ];
-        return { empathy, reframe, actions, risk };
+        return {
+            empathy: "I hear that you're sharing something important, and I want you to know that your feelings are completely valid. What you're experiencing matters, and it takes courage to express it.",
+            reframe: "While this moment feels challenging, remember that feelings are temporary and you have the strength to navigate through this. Every difficult experience is also an opportunity for growth and self-understanding.",
+            actions: [
+                {
+                    title: '5-Minute Grounding Exercise',
+                    steps: [
+                        "Find a quiet, comfortable spot where you won't be disturbed",
+                        'Take a deep breath in through your nose for 4 counts',
+                        'Hold your breath gently for 2 counts',
+                        'Exhale slowly through your mouth for 6 counts',
+                        'Repeat this cycle for 5 minutes, focusing only on your breath',
+                    ],
+                    duration_mins: 5,
+                    category: 'grounding',
+                },
+                {
+                    title: 'Gratitude Journaling',
+                    steps: [
+                        'Get a piece of paper or open your notes app',
+                        'Think about three positive moments from today, no matter how small',
+                        'Write down each moment in detail',
+                        'Reflect on why each moment was meaningful to you',
+                        'Notice how you feel after completing this exercise',
+                    ],
+                    duration_mins: 10,
+                    category: 'cognitive',
+                },
+            ],
+            risk,
+        };
     },
     async generateWeeklySummary(userId, withAudio = false) {
         const systemPrompt = `Create a youth-friendly weekly emotional summary. 

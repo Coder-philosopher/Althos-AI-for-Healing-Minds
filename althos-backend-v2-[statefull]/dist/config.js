@@ -12,6 +12,7 @@ exports.config = {
     // Database
     databaseUrl: process.env.DATABASE_URL,
     // Google Cloud
+    geminiApiKey: process.env.GEMINI_API_KEY || '',
     gcpProjectId: process.env.GCP_PROJECT_ID || '',
     gcpLocation: process.env.GCP_LOCATION || 'us-central1',
     geminiModel: process.env.GEMINI_MODEL || 'gemini-1.5-pro',
@@ -19,6 +20,11 @@ exports.config = {
     // Features
     enableAI: process.env.ENABLE_AI !== 'false',
     enableTTS: process.env.ENABLE_TTS !== 'false',
+    gcp: {
+        projectId: process.env.GCP_PROJECT_ID || '',
+        credentials: process.env.GOOGLE_APPLICATION_CREDENTIALS || '',
+        bucketName: process.env.GCS_BUCKET_NAME || 'althos-journal-audio',
+    }
 };
 // Validation
 if (!exports.config.databaseUrl) {

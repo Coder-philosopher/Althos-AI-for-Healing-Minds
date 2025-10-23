@@ -9,14 +9,15 @@ const config_1 = __importDefault(require("./config"));
 const db_1 = __importDefault(require("./db"));
 const ai_1 = __importDefault(require("./ai"));
 const utils_1 = require("./utils");
+const audio_1 = require("./services/audio");
 const app = (0, express_1.default)();
 // Middleware
 app.use((0, cors_1.default)({
-    origin: process.env.NODE_ENV === "development"
-        ? "https://althos.nitrr.in"
-        : "https://althos.nitrr.in",
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "X-User-Id", "Authorization"],
+    origin: process.env.NODE_ENV === 'development'
+        ? 'http://localhost:3000'
+        : 'https://althos.nitrr.in',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'X-User-Id', 'Authorization'],
     credentials: true
 }));
 app.use(express_1.default.json());
@@ -61,6 +62,8 @@ const errorHandler = (error, req, res, next) => {
     });
 };
 // =================== ROUTES ===================
+const translateRouter = require('../routes/translate');
+app.use('/api', translateRouter);
 // Health check
 app.get('/health', async (req, res, next) => {
     const dbHealthy = await db_1.default.healthCheck();
@@ -196,19 +199,108 @@ app.get('/journal', requireUser, async (req, res, next) => {
         next(error);
     }
 });
+// Get single journal entry
+app.get('/journal/:id', requireUser, async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const journal = await db_1.default.journals.findById(id, req.userId);
+        if (!journal) {
+            return res.status(404).json({
+                success: false,
+                error: 'Journal entry not found'
+            });
+        }
+        res.json({
+            success: true,
+            data: journal
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// Update journal entry
+app.put('/journal/:id', requireUser, async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { title, content, tags, mood } = req.body;
+        const updated = await db_1.default.journals.update(id, req.userId, {
+            title,
+            content,
+            tags,
+            mood_valence: mood?.valence,
+            mood_arousal: mood?.arousal
+        });
+        if (!updated) {
+            return res.status(404).json({
+                success: false,
+                error: 'Journal entry not found'
+            });
+        }
+        res.json({
+            success: true,
+            data: updated
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// Delete journal entry
+app.delete('/journal/:id', requireUser, async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const deleted = await db_1.default.journals.delete(id, req.userId);
+        if (!deleted) {
+            return res.status(404).json({
+                success: false,
+                error: 'Journal entry not found'
+            });
+        }
+        res.json({
+            success: true,
+            message: 'Journal entry deleted successfully'
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
 // =================== AI ENDPOINTS ===================
 // Journal coaching
 app.post('/ai/journal-coach', requireUser, async (req, res, next) => {
     try {
-        const request = req.body;
-        if (!request.text || request.text.trim().length === 0) {
-            throw new utils_1.AppError('Text is required for coaching', 400);
+        const { journal_id } = req.body;
+        if (!journal_id) {
+            throw new utils_1.AppError('Journal ID is required', 400);
         }
+        // Check if AI response already exists (cache)
+        const existingResponse = await db_1.default.journals.getAIResponse(journal_id, req.userId);
+        if (existingResponse) {
+            return res.json({
+                success: true,
+                data: existingResponse,
+                cached: true
+            });
+        }
+        // Fetch the journal entry
+        const journal = await db_1.default.journals.findById(journal_id, req.userId);
+        if (!journal) {
+            throw new utils_1.AppError('Journal entry not found', 404);
+        }
+        // Generate AI response
+        const request = {
+            text: journal.content,
+            language_pref: 'English',
+            tone_pref: 'warm and supportive'
+        };
         const response = await ai_1.default.journalCoach(request);
+        // Store AI response in database
+        await db_1.default.journals.saveAIResponse(journal_id, req.userId, response);
         // Log high-risk interactions
         if (response.risk === 'high' || response.risk === 'med') {
             await db_1.default.query(`INSERT INTO alerts (user_id, risk_level, context_text)
-         VALUES ($1, $2, $3)`, [req.userId, response.risk, request.text.substring(0, 500)]);
+         VALUES ($1, $2, $3)`, [req.userId, response.risk, journal.content.substring(0, 500)]);
         }
         await db_1.default.logAccess({
             user_id: req.userId,
@@ -218,12 +310,75 @@ app.post('/ai/journal-coach', requireUser, async (req, res, next) => {
         });
         res.json({
             success: true,
-            data: response
+            data: response,
+            cached: false
         });
     }
     catch (error) {
         next(error);
     }
+});
+app.post('/ai/journal-audio', requireUser, async (req, res, next) => {
+    try {
+        const { journal_id, language } = req.body;
+        if (!journal_id || !language) {
+            throw new utils_1.AppError('Journal ID and language are required', 400);
+        }
+        // Check cache first
+        const cachedUrl = await db_1.default.journals.getAudioCache(journal_id, language);
+        if (cachedUrl) {
+            return res.json({
+                success: true,
+                data: {
+                    audioUrl: cachedUrl,
+                    language,
+                    cached: true,
+                },
+            });
+        }
+        // Get journal and AI response
+        const journal = await db_1.default.journals.findById(journal_id, req.userId);
+        if (!journal) {
+            throw new utils_1.AppError('Journal entry not found', 404);
+        }
+        const aiResponse = await db_1.default.journals.getAIResponse(journal_id, req.userId);
+        if (!aiResponse) {
+            throw new utils_1.AppError('AI response not found. Generate AI support first.', 404);
+        }
+        // Combine AI response text for audio
+        const fullText = `${aiResponse.empathy}\n\n${aiResponse.reframe}\n\nHere are some activities you can try:\n\n${aiResponse.actions.map((action, i) => `${i + 1}. ${action.title}: ${action.steps.join('. ')}`).join('\n\n')}`;
+        // Generate and cache audio
+        const result = await audio_1.audioService.generateAndCacheAudio({
+            text: fullText,
+            targetLanguage: language,
+            journalId: journal_id,
+        });
+        // Save to cache
+        await db_1.default.journals.saveAudioCache(journal_id, language, result.audioUrl);
+        await db_1.default.logAccess({
+            user_id: req.userId,
+            action: 'ai_audio_generation',
+            resource: 'ai',
+            ip_address: req.ip,
+        });
+        res.json({
+            success: true,
+            data: result,
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// Add route to get supported languages
+app.get('/ai/supported-languages', (req, res) => {
+    res.json({
+        success: true,
+        data: Object.entries(audio_1.SUPPORTED_LANGUAGES).map(([code, config]) => ({
+            code,
+            name: config.name,
+        })),
+    });
 });
 // Weekly summary
 app.post('/ai/weekly-summary', requireUser, async (req, res, next) => {

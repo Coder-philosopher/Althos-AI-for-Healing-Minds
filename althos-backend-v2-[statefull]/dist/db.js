@@ -77,7 +77,69 @@ exports.db = {
          WHERE user_id = $1 
          ORDER BY created_at DESC 
          LIMIT $2 OFFSET $3`, [userId, limit, offset]);
-        }
+        },
+        async findById(id, userId) {
+            const result = await exports.db.query(`SELECT * FROM journals 
+       WHERE id = $1 AND user_id = $2`, [id, userId]);
+            return result[0] || null;
+        },
+        async update(id, userId, data) {
+            const result = await exports.db.query(`UPDATE journals 
+     SET title = $1, content = $2, tags = $3,
+         mood_valence = $4, mood_arousal = $5
+     WHERE id = $6 AND user_id = $7
+     RETURNING *`, [
+                data.title,
+                data.content,
+                data.tags,
+                data.mood_valence,
+                data.mood_arousal,
+                id,
+                userId,
+            ]);
+            return result[0] || null;
+        },
+        async delete(id, userId) {
+            const result = await exports.db.query(`DELETE FROM journals 
+       WHERE id = $1 AND user_id = $2
+       RETURNING id`, [id, userId]);
+            return result[0] || null;
+        },
+        async getAIResponse(journalId, userId) {
+            const result = await exports.db.queryOne(`SELECT empathy, reframe, actions, risk 
+       FROM journal_ai_responses 
+       WHERE journal_id = $1 AND user_id = $2`, [journalId, userId]);
+            if (!result)
+                return null;
+            return {
+                empathy: result.empathy,
+                reframe: result.reframe,
+                actions: result.actions,
+                risk: result.risk
+            };
+        },
+        async saveAIResponse(journalId, userId, response) {
+            await exports.db.query(`INSERT INTO journal_ai_responses (journal_id, user_id, empathy, reframe, actions, risk)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       ON CONFLICT (journal_id) 
+       DO UPDATE SET empathy = EXCLUDED.empathy, 
+                     reframe = EXCLUDED.reframe,
+                     actions = EXCLUDED.actions,
+                     risk = EXCLUDED.risk`, [journalId, userId, response.empathy, response.reframe,
+                JSON.stringify(response.actions), response.risk]);
+        },
+        async getAudioCache(journalId, language) {
+            const result = await exports.db.queryOne(`SELECT audio_cache FROM journal_ai_responses 
+       WHERE journal_id = $1`, [journalId]);
+            if (!result || !result.audio_cache)
+                return null;
+            return result.audio_cache[language] || null;
+        },
+        async saveAudioCache(journalId, language, audioUrl) {
+            await exports.db.query(`UPDATE journal_ai_responses 
+     SET audio_cache = COALESCE(audio_cache, '{}'::jsonb) || jsonb_build_object($2::text, $3::text)
+     WHERE journal_id = $1`, [journalId, language, audioUrl]);
+        },
     },
     // Test operations
     tests: {
