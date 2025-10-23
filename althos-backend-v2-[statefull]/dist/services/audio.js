@@ -9,27 +9,30 @@ const translate_1 = require("@google-cloud/translate");
 const storage_1 = require("@google-cloud/storage");
 const config_1 = __importDefault(require("../config"));
 const ttsClient = new text_to_speech_1.TextToSpeechClient({
-    keyFilename: config_1.default.gcp.credentials,
+    credentials: config_1.default.gcp.credentials,
+    projectId: config_1.default.gcp.projectId,
 });
 const translateClient = new translate_1.TranslationServiceClient({
-    keyFilename: config_1.default.gcp.credentials,
+    credentials: config_1.default.gcp.credentials,
+    projectId: config_1.default.gcp.projectId,
 });
 const storage = new storage_1.Storage({
-    keyFilename: config_1.default.gcp.credentials,
+    credentials: config_1.default.gcp.credentials,
+    projectId: config_1.default.gcp.projectId,
 });
 const bucket = storage.bucket(config_1.default.gcp.bucketName);
 // Supported Indian languages with voice configurations
 exports.SUPPORTED_LANGUAGES = {
-    'en': { name: 'English', voiceName: 'en-IN-Neural2-D', languageCode: 'en-IN' },
-    'hi': { name: 'हिन्दी (Hindi)', voiceName: 'hi-IN-Neural2-D', languageCode: 'hi-IN' },
-    'ta': { name: 'தமிழ் (Tamil)', voiceName: 'ta-IN-Standard-A', languageCode: 'ta-IN' },
-    'te': { name: 'తెలుగు (Telugu)', voiceName: 'te-IN-Standard-A', languageCode: 'te-IN' },
-    'bn': { name: 'বাংলা (Bengali)', voiceName: 'bn-IN-Standard-A', languageCode: 'bn-IN' },
-    'ml': { name: 'മലയാളം (Malayalam)', voiceName: 'ml-IN-Standard-A', languageCode: 'ml-IN' },
-    'mr': { name: 'मराठी (Marathi)', voiceName: 'mr-IN-Standard-A', languageCode: 'mr-IN' },
-    'gu': { name: 'ગુજરાતી (Gujarati)', voiceName: 'gu-IN-Standard-A', languageCode: 'gu-IN' },
-    'kn': { name: 'ಕನ್ನಡ (Kannada)', voiceName: 'kn-IN-Standard-A', languageCode: 'kn-IN' },
-    'pa': { name: 'ਪੰਜਾਬੀ (Punjabi)', voiceName: 'pa-IN-Standard-A', languageCode: 'pa-IN' },
+    en: { name: 'English', voiceName: 'en-IN-Neural2-D', languageCode: 'en-IN' },
+    hi: { name: 'हिन्दी (Hindi)', voiceName: 'hi-IN-Neural2-D', languageCode: 'hi-IN' },
+    ta: { name: 'தமிழ் (Tamil)', voiceName: 'ta-IN-Standard-A', languageCode: 'ta-IN' },
+    te: { name: 'తెలుగు (Telugu)', voiceName: 'te-IN-Standard-A', languageCode: 'te-IN' },
+    bn: { name: 'বাংলা (Bengali)', voiceName: 'bn-IN-Standard-A', languageCode: 'bn-IN' },
+    ml: { name: 'മലയാളം (Malayalam)', voiceName: 'ml-IN-Standard-A', languageCode: 'ml-IN' },
+    mr: { name: 'मराठी (Marathi)', voiceName: 'mr-IN-Standard-A', languageCode: 'mr-IN' },
+    gu: { name: 'ગુજરાતી (Gujarati)', voiceName: 'gu-IN-Standard-A', languageCode: 'gu-IN' },
+    kn: { name: 'ಕನ್ನಡ (Kannada)', voiceName: 'kn-IN-Standard-A', languageCode: 'kn-IN' },
+    pa: { name: 'ਪੰਜਾਬੀ (Punjabi)', voiceName: 'pa-IN-Standard-A', languageCode: 'pa-IN' },
 };
 exports.audioService = {
     async translateText(text, targetLanguage) {
@@ -54,7 +57,7 @@ exports.audioService = {
             voice: {
                 languageCode: langConfig.languageCode,
                 name: langConfig.voiceName,
-                ssmlGender: 'FEMALE', // Changed from 'NEUTRAL' to 'FEMALE'
+                ssmlGender: 'FEMALE',
             },
             audioConfig: {
                 audioEncoding: 'MP3',
@@ -71,20 +74,15 @@ exports.audioService = {
         const file = bucket.file(fileName);
         await file.save(audioBuffer, {
             contentType: 'audio/mpeg',
-            metadata: {
-                cacheControl: 'public, max-age=31536000',
-            },
+            metadata: { cacheControl: 'public, max-age=31536000' },
         });
         await file.makePublic();
         return `https://storage.googleapis.com/${config_1.default.gcp.bucketName}/${fileName}`;
     },
     async generateAndCacheAudio(request) {
         const { text, targetLanguage, journalId } = request;
-        // Translate text if needed
         const translatedText = await this.translateText(text, targetLanguage);
-        // Generate audio
         const audioBuffer = await this.generateAudio(translatedText, targetLanguage);
-        // Upload to GCS
         const audioUrl = await this.uploadToGCS(audioBuffer, journalId, targetLanguage);
         return {
             audioUrl,
