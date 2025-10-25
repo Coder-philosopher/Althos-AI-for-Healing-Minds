@@ -15,12 +15,16 @@ function getAIClient(): v1beta1.PredictionServiceClient {
   return aiClient!;
 }
 
+
+
 function getTTSClient(): TextToSpeechClient {
   if (!ttsClient && config.enableTTS) {
     ttsClient = new TextToSpeechClient();
   }
   return ttsClient!;
 }
+
+
 
 
 async function callGemini(userPrompt: string, systemPrompt: string): Promise<string> {
@@ -64,7 +68,7 @@ async function callGemini(userPrompt: string, systemPrompt: string): Promise<str
 
 export const ai = {
 
-   async journalCoach(request: JournalCoachRequest): Promise<JournalCoachResponse> {
+async journalCoach(request: JournalCoachRequest): Promise<JournalCoachResponse> {
   const systemPrompt = `You are an empathetic mental health peer supporter for Indian youth. 
 Provide validation, gentle reframing, and practical micro-actions. 
 You are NOT a therapist. Always remind users to seek professional help for serious concerns.
@@ -185,8 +189,7 @@ Respond ONLY with the JSON format specified above.`;
     async generateWeeklySummary(userId: string, withAudio = false): Promise<{
     summary_text: string;
     audio_url?: string;
-    metaphor: string;
-  }> {
+    metaphor: string;}> {
     const systemPrompt = `Create a youth-friendly weekly emotional summary. 
     Use engaging metaphors and acknowledge their journey. 
     Keep under 150 words. Be encouraging and insightful.`;

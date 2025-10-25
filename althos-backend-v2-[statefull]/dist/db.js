@@ -41,6 +41,26 @@ exports.db = {
             return false;
         }
     },
+    // Query operations
+    // Add user embeddings table methods
+    userEmbeddings: {
+        async upsert(userId, embedding) {
+            await exports.db.query(`INSERT INTO user_embeddings (user_id, embedding) VALUES ($1, $2)
+       ON CONFLICT (user_id) DO UPDATE SET embedding = $2`, [userId, embedding]);
+        },
+        async get(userId) {
+            const r = await exports.db.queryOne(`SELECT embedding FROM user_embeddings WHERE user_id = $1`, [userId]);
+            return r?.embedding || null;
+        }
+    },
+    chatCache: {
+        async saveAnswer(data) {
+            await exports.db.query(`INSERT INTO chat_cache (id, user_id, query, answer, tags, created_at) VALUES ($1, $2, $3, $4, $5, $6)`, [data.id, data.user_id, data.query, data.answer, data.tags, data.created_at]);
+        },
+        async findAnswer(userId, query) {
+            return await exports.db.queryOne(`SELECT answer FROM chat_cache WHERE user_id = $1 AND query = $2`, [userId, query]);
+        }
+    },
     // User operations
     users: {
         async create(userData) {

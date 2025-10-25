@@ -1,4 +1,37 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -10,6 +43,7 @@ const db_1 = __importDefault(require("./db"));
 const ai_1 = __importDefault(require("./ai"));
 const utils_1 = require("./utils");
 const audio_1 = require("./services/audio");
+const chatbot = __importStar(require("./services/chatbot"));
 const app = (0, express_1.default)();
 // Middleware
 const allowedOrigins = [
@@ -148,6 +182,19 @@ app.put('/profile', requireUser, async (req, res, next) => {
     }
     catch (error) {
         next(error);
+    }
+});
+// =================== QUERY ENDPOINTS ===================
+// POST /chat/query - process user query, build context embeddings, call Gemini LLM, cache answer
+app.post('/chat/query', requireUser, async (req, res, next) => {
+    const userId = req.userId;
+    const { query } = req.body;
+    try {
+        const answer = await chatbot.answerUserQuery(userId, query);
+        res.json({ success: true, answer });
+    }
+    catch (err) {
+        next(err);
     }
 });
 // =================== JOURNAL ENDPOINTS ===================

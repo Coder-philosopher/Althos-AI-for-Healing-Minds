@@ -6,7 +6,6 @@ import { QuickMoodEntry } from '@/components/dashboard/QuickMoodEntry'
 import { RecentJournals } from '@/components/dashboard/RecentJournals'
 import { WeeklyScore } from '@/components/dashboard/WeeklyScore'
 import { QuickActions } from '@/components/dashboard/QuickActions'
-import { UpcomingReminders } from '@/components/dashboard/UpcomingReminders'
 
 export default function Dashboard() {
   const { user } = useAuth()

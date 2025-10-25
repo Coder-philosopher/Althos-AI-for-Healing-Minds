@@ -256,3 +256,13 @@ export const getSupportedLanguages = async () => {
   return apiCall('/api/languages')
 }
 
+export const postChatQuery = async (userId: string, query: string) => {
+  return apiCall('/chat/query', {
+    method: 'POST',
+    headers: { 'X-User-Id': userId },
+    body: JSON.stringify({ query }),
+  })
+}
+
+
+

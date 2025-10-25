@@ -104,3 +104,17 @@ export interface ShareRequest {
 export interface AppError extends Error {
   statusCode: number;
 }
+
+export type UserEmbedding = {
+  user_id: string;
+  embedding: number[]; // array of floats
+}
+
+export type ChatCacheEntry = {
+  id: string;
+  user_id: string;
+  query: string;
+  answer: string;
+  tags: string[];
+  created_at: string;
+}

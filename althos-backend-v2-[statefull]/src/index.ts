@@ -23,7 +23,7 @@ import {
   ShareRequest
 } from './types';
 import { audioService, SUPPORTED_LANGUAGES } from './services/audio';
-
+import * as chatbot from './services/chatbot'
 const app = express();
 
 // Middleware
@@ -190,6 +190,22 @@ app.put('/profile', requireUser, async (req: any, res, next) => {
     next(error);
   }
 });
+
+// =================== QUERY ENDPOINTS ===================
+// POST /chat/query - process user query, build context embeddings, call Gemini LLM, cache answer
+app.post('/chat/query', requireUser, async (req: any, res, next) => {
+  const userId = req.userId
+  const { query } = req.body
+  try {
+    const answer = await chatbot.answerUserQuery(userId, query)
+    res.json({ success: true, answer })
+  } catch (err) {
+    next(err)
+  }
+})
+
+
+
 
 // =================== JOURNAL ENDPOINTS ===================
 
@@ -770,7 +786,6 @@ app.get('/mood/atlas', requireUser, async (req: any, res, next) => {
   }
 });
 
-// =================== SHARING ENDPOINTS ===================
 
 // =================== SHARING ENDPOINTS ===================
 
@@ -1097,8 +1112,8 @@ app.use('*', (req, res, next) => {
 
 // Start server
 const server = app.listen(config.port, () => {
-  console.log(`🚀 Althos backend running on port ${config.port}`);
-  console.log(`📊 Environment: ${config.nodeEnv}`);
+  console.log(`🤗 Althos backend running on port ${config.port}`);
+  console.log(`😎 Environment: ${config.nodeEnv}`);
   console.log(`🤖 AI Services: ${config.enableAI ? '✅ Enabled' : '🔄 Disabled'}`);
 });
 

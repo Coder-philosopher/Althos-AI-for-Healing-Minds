@@ -4,6 +4,7 @@ import { ReactNode, useState } from 'react'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { TopNav } from '@/components/layout/TopNav'
 import { Montserrat } from 'next/font/google'
+import Chatbot from '@/components/Chatbot'
 
 const montserrat = Montserrat({
   subsets: ['latin'],
@@ -32,6 +33,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
         <main className="flex-1 overflow-auto p-6 relative">
           <div className="max-w-7xl mx-auto">
+            <Chatbot />
             {children}
           </div>
         </main>

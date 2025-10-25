@@ -47,6 +47,40 @@ export const db = {
       return false;
     }
   },
+   
+  // Query operations
+
+  // Add user embeddings table methods
+userEmbeddings: {
+  async upsert(userId: string, embedding: number[]) {
+    await db.query(
+      `INSERT INTO user_embeddings (user_id, embedding) VALUES ($1, $2)
+       ON CONFLICT (user_id) DO UPDATE SET embedding = $2`,
+      [userId, embedding]
+    )
+  },
+  async get(userId: string): Promise<number[] | null> {
+    const r = await db.queryOne<{ embedding: number[] }>(
+      `SELECT embedding FROM user_embeddings WHERE user_id = $1`, [userId])
+    return r?.embedding || null
+  }
+},
+chatCache: {
+  async saveAnswer(data: { id: string; user_id: string; query: string; answer: string; tags: string[]; created_at: string; }) {
+    await db.query(
+      `INSERT INTO chat_cache (id, user_id, query, answer, tags, created_at) VALUES ($1, $2, $3, $4, $5, $6)`,
+      [data.id, data.user_id, data.query, data.answer, data.tags, data.created_at]
+    )
+  },
+  async findAnswer(userId: string, query: string): Promise<{ answer: string } | null> {
+    return await db.queryOne(
+      `SELECT answer FROM chat_cache WHERE user_id = $1 AND query = $2`, [userId, query]
+    )
+  }
+},
+
+
+
 
   // User operations
   users: {
