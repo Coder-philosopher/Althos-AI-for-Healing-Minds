@@ -5,8 +5,8 @@ import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import {
   Heart, Home, PenTool, Brain, Smile,
-  TestTube2, Share2, User, Settings,
-  X, ChevronLeft, ChevronRight, Sparkles
+  BookCheck, ScanQrCode, User, Settings,
+  X, ChevronLeft, ChevronRight, MessagesSquare
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Montserrat } from 'next/font/google'
@@ -15,14 +15,14 @@ const montserrat = Montserrat({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
 })
-
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home, badge: null, color: 'from-[#F8A5C2]/20 to-[#E879B9]/20' },
   { name: 'Journal', href: '/dashboard/journal', icon: PenTool, badge: '3', color: 'from-[#E879B9]/20 to-[#DB5F9A]/20' },
   { name: 'Mood', href: '/dashboard/mood', icon: Smile, badge: null, color: 'from-[#F09FCA]/20 to-[#E879B9]/20' },
-  { name: 'Tests', href: '/dashboard/tests', icon: TestTube2, badge: 'New', color: 'from-[#DB5F9A]/20 to-[#C74585]/20' },
+  { name: 'Tests', href: '/dashboard/tests', icon: BookCheck, badge: 'New', color: 'from-[#DB5F9A]/20 to-[#C74585]/20' },
   { name: 'Wellness', href: '/dashboard/wellness', icon: Brain, badge: null, color: 'from-[#E879B9]/20 to-[#F09FCA]/20' },
-  { name: 'Share', href: '/dashboard/share', icon: Share2, badge: null, color: 'from-[#F8A5C2]/20 to-[#DB5F9A]/20' },
+  { name: 'Share-QR', href: '/dashboard/share', icon: ScanQrCode, badge: null, color: 'from-[#F8A5C2]/20 to-[#DB5F9A]/20' },
+  { name: 'Chat', href: '/dashboard/chat', icon: MessagesSquare, badge: null, color: 'from-[#F8A5C2]/20 to-[#DB5F9A]/20' },
   { name: 'Profile Settings', href: '/dashboard/profile', icon: User, badge: null, color: 'from-[#DB5F9A]/20 to-[#E879B9]/20' },
 ]
 
