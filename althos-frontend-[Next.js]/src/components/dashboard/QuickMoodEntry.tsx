@@ -238,7 +238,7 @@ export function QuickMoodEntry() {
             </div>
             <div className="px-4 py-2 rounded-full bg-gradient-to-r from-[#F8A5C2]/30 to-[#E879B9]/20 border-2 border-[#E879B9]/30 shadow-lg">
               <span className="text-sm font-bold bg-gradient-to-r from-[#DB5F9A] to-[#E879B9] bg-clip-text text-transparent">
-                Daily Check-in
+                Daily
               </span>
             </div>
           </div>

@@ -1,7 +1,8 @@
 import { Pool, QueryResultRow } from 'pg';
 import config from './config';
 import { User, Journal, RegisterUserRequest,JournalCoachResponse } from './types';
-
+// import { MongoClient, ServerApiVersion, Db, Collection,ObjectId  } from 'mongodb';
+// import {  Message } from './types';
 let pool: Pool | null = null;
 
 function getPool(): Pool {
@@ -79,40 +80,51 @@ chatCache: {
   }
 },
 
-
-
-
   // User operations
   users: {
-    async create(userData: RegisterUserRequest): Promise<User> {
-      const result = await db.query<User>(
-        `INSERT INTO users (id, name, age, sex, profession, hobbies, locale)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
-         RETURNING *`,
-        [userData.id, userData.name, userData.age, userData.sex, 
-         userData.profession, userData.hobbies, userData.locale]
-      );
-      return result[0];
-    },
+     async create(userData: RegisterUserRequest): Promise<User> {
+    const result = await db.query<User>(
+      `INSERT INTO users (id, name, age, sex, profession, hobbies, locale,org_code,email)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       RETURNING *`,
+      [
+        userData.id,
+        userData.name,
+        userData.age,
+        userData.sex,
+        userData.profession,
+        userData.hobbies,
+        userData.locale,
+        userData.org_code || null,
+        userData.email,
+      ]
+    );
+    return result[0];
+  },
 
     async findById(id: string): Promise<User | null> {
       return db.queryOne<User>('SELECT * FROM users WHERE id = $1', [id]);
     },
+    async findByEmailAndName(email: string, name: string): Promise<User | null> {
+    return db.queryOne<User>(
+      'SELECT * FROM users WHERE email = $1 AND name = $2',
+      [email, name]
+    );
+  },
 
-    async update(id: string, updates: Partial<User>): Promise<User | null> {
-      const fields = Object.keys(updates).filter(k => k !== 'id');
-      if (fields.length === 0) return null;
+ async update(id: string, updates: Partial<User>): Promise<User | null> {
+    const fields = Object.keys(updates).filter(k => k !== 'id');
+    if (fields.length === 0) return null;
 
-      const setClause = fields.map((f, i) => `${f} = $${i + 2}`).join(', ');
-      const values = [id, ...fields.map(f => updates[f as keyof User])];
+    const setClause = fields.map((f, i) => `${f} = $${i + 2}`).join(', ');
+    const values = [id, ...fields.map(f => updates[f as keyof User])];
 
-      const result = await db.query<User>(
-        `UPDATE users SET ${setClause}, updated_at = NOW() 
-         WHERE id = $1 RETURNING *`,
-        values
-      );
-      return result[0] || null;
-    }
+    const result = await db.query<User>(
+      `UPDATE users SET ${setClause}, updated_at = NOW() WHERE id = $1 RETURNING *`,
+      values
+    );
+    return result[0] || null;
+  }
   },
 
   // Journal operations
@@ -341,5 +353,9 @@ async saveAudioCache(
     );
   }
 };
+
+
+
+
 
 export default db;

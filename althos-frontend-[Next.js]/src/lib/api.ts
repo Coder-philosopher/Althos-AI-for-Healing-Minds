@@ -2,41 +2,108 @@ const API_BASE = process.env.NODE_ENV === 'development'
   ? 'http://localhost:8080' 
   : 'https://althos-ai-for-healing-minds-ivory.vercel.app'
 
+
+
+import crypto from 'crypto';
+const sec ="0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+const KEY = Buffer.from(sec, 'hex'); // 32 bytes hex string
+const ALGO = 'aes-256-gcm';
+
 class APIError extends Error {
   constructor(public status: number, message: string, public endpoint?: string) {
-    super(message)
-    this.name = 'APIError'
+    super(message);
+    this.name = 'APIError';
   }
 }
 
+// -------- Encryption / Decryption Helpers --------
+function encrypt(data: any) {
+  const iv = crypto.randomBytes(12); // 12 bytes for GCM
+  const cipher = crypto.createCipheriv(ALGO, KEY, iv);
+  let encrypted = cipher.update(JSON.stringify(data), 'utf8', 'base64');
+  encrypted += cipher.final('base64');
+  const tag = cipher.getAuthTag();
+  return {
+    encrypted,
+    iv: iv.toString('base64'),
+    tag: tag.toString('base64'),
+  };
+}
+
+function decrypt(data: any) {
+  const decipher = crypto.createDecipheriv(ALGO, KEY, Buffer.from(data.iv, 'base64'));
+  decipher.setAuthTag(Buffer.from(data.tag, 'base64'));
+  let decrypted = decipher.update(data.encrypted, 'base64', 'utf8');
+  decrypted += decipher.final('utf8');
+  return JSON.parse(decrypted);
+}
+
+// -------- API Call Wrapper --------
 async function apiCall(endpoint: string, options: RequestInit = {}) {
-  const url = `${API_BASE}${endpoint}`
+  const body = options.body ? encrypt(JSON.parse(options.body.toString())) : undefined;
 
+  const response = await fetch(`${API_BASE}${endpoint}`, {
+    ...options,
+    body: body ? JSON.stringify(body) : undefined,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
+  let data: any;
   try {
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-    })
-
-    let data: any
-    try {
-      data = await response.json()
-    } catch {
-      data = null
-    }
-
-    if (!response.ok) {
-      throw new APIError(response.status, data?.message || 'Request failed', endpoint)
-    }
-
-    return data
-  } catch (err) {
-    throw err
+    data = await response.json();
+  } catch {
+    data = null;
   }
+
+  if (!response.ok) {
+    throw new APIError(response.status, data?.message || 'Request failed', endpoint);
+  }
+
+  // Decrypt response if encrypted
+  if (data?.encrypted && data?.iv && data?.tag) {
+    return decrypt(data);
+  }
+
+  return data;
 }
+
+
+
+
+
+// api.ts
+
+export async function fetchFriends(userId:string) {
+  const res = await fetch('/api/friends', {
+    headers: { 'X-User-Id': userId }
+  });
+  const data = await res.json();
+  if (!data.success) throw new Error(data.message);
+  return data.data;
+}
+
+export async function fetchMessages(conversationId:string) {
+  const res = await fetch(`/api/messages/${conversationId}`);
+  const data = await res.json();
+  if (!data.success) throw new Error(data.message);
+  return data.data;
+}
+
+export async function sendMessage(conversationId:string, sender:string, receiver:string, text:string) {
+  const res = await fetch('/api/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ conversationId, sender, receiver, text }),
+  });
+  const data = await res.json();
+  if (!data.success) throw new Error(data.message);
+  return true;
+}
+
+
 
 // -----------------------
 // Auth & Profile
@@ -45,6 +112,13 @@ export const register = async (userData: any) => {
   return apiCall('/register', {
     method: 'POST',
     body: JSON.stringify(userData),
+  })
+}
+
+export const login = async (credentials: { name: string; email: string }) => {
+  return apiCall('/login', {
+    method: 'POST',
+    body: JSON.stringify(credentials),
   })
 }
 
@@ -61,6 +135,7 @@ export const updateProfile = async (userId: string, updates: any) => {
     body: JSON.stringify(updates),
   })
 }
+
 
 // -----------------------
 // Journal

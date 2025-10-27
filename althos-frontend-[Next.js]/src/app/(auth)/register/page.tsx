@@ -15,11 +15,13 @@ export default function RegisterPage() {
   const router = useRouter()
   const [formData, setFormData] = useState({
     name: '',
+    email: '',
+    org_code: '',
     age: '',
     sex: '',
     profession: '',
     hobbies: [] as string[],
-    locale: 'en-IN'
+    locale: 'en-IN',
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -38,52 +40,60 @@ export default function RegisterPage() {
     }))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
-
-    if (!formData.name.trim()) {
-      setError('Name is required')
-      setLoading(false)
-      return
-    }
-
-    try {
-      const userId = crypto.randomUUID()
-      await register({
-        id: userId,
-        ...formData,
-        age: formData.age ? parseInt(formData.age) : undefined
-      })
-      
-      sessionStorage.setItem('userId', userId)
-      router.push('/dashboard')
-    } catch (err) {
-      console.log(err);
-      setError('Registration failed. Please try again.')
-    } finally {
-      setLoading(false)
-    }
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault()
+  setLoading(true)
+  setError('')
+  
+  if (!formData.name.trim()) {
+    setError('Name is required')
+    setLoading(false)
+    return
   }
+  if (!formData.email.trim()) {
+    setError('Email is required')
+    setLoading(false)
+    return
+  }
+  // Optional: Add email format validation here, e.g. regex test
+
+  try {
+    const userId = crypto.randomUUID()
+    await register({
+      id: userId,
+      ...formData,
+      age: formData.age ? parseInt(formData.age) : undefined,
+    })
+
+    sessionStorage.setItem('userId', userId)
+    router.push('/dashboard')
+  } catch (err: any) {
+    console.error(err)
+    setError(
+      err?.response?.data?.message ||
+        'Registration failed. Please try again.'
+    )
+  } finally {
+    setLoading(false)
+  }
+}
+
 
   return (
-    <div className={`${montserrat.className} min-h-screen bg-white flex items-center justify-center p-4 relative overflow-hidden`}>
-      {/* Floating background elements */}
+ <div className={`${montserrat.className} min-h-screen bg-white flex items-center justify-center p-4 relative overflow-hidden`}>
       <div className="absolute top-[10%] right-[10%] w-72 h-72 rounded-full bg-gradient-to-br from-[#FFB8E0]/20 to-[#EC7FA9]/15 blur-[60px] z-0" />
       <div className="absolute bottom-[15%] left-[15%] w-48 h-48 rounded-full bg-gradient-to-br from-[#BE5985]/10 to-[#FFEDFA]/30 blur-[40px] z-0" />
-      
+
       <div className="w-full max-w-2xl relative z-10">
-        {/* Header */}
         <div className="text-center mb-8">
-          <Link 
-            href="/" 
+          <Link
+            href="/"
             className="inline-flex items-center gap-2 text-[#EC7FA9] hover:text-[#BE5985] mb-6 px-4 py-2 rounded-full bg-white/80 backdrop-blur-md border border-[#FFB8E0]/30 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
           >
             <ArrowLeft className="h-4 w-4" />
             <span>Back to Home</span>
           </Link>
-          
+
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="p-3 rounded-full bg-white/90 backdrop-blur-md border border-[#FFB8E0]/40 shadow-lg shadow-[#EC7FA9]/20">
               <Heart className="h-8 w-8 text-[#EC7FA9]" />
@@ -94,7 +104,6 @@ export default function RegisterPage() {
           <p className="text-[#BE5985]/70">Tell us a bit about yourself to personalize your experience</p>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="p-8 rounded-3xl bg-white/90 backdrop-blur-md border border-[#FFB8E0]/40 shadow-xl shadow-[#FFB8E0]/20 space-y-6">
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-2xl backdrop-blur-sm">
@@ -112,6 +121,32 @@ export default function RegisterPage() {
               placeholder="Your full name"
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-[#BE5985] mb-3">
+              Email <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="email"
+              className="w-full px-4 py-3 rounded-2xl bg-white/80 backdrop-blur-sm border border-[#FFB8E0]/40 text-[#BE5985] placeholder-[#BE5985]/50 focus:outline-none focus:ring-2 focus:ring-[#EC7FA9]/50 focus:border-[#EC7FA9] transition-all duration-300 shadow-inner shadow-[#FFEDFA]/30"
+              placeholder="Your email address"
+              value={formData.email}
+              onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-[#BE5985] mb-3">
+              Organization Code (optional)
+            </label>
+            <input
+              type="text"
+              className="w-full px-4 py-3 rounded-2xl bg-white/80 backdrop-blur-sm border border-[#FFB8E0]/40 text-[#BE5985] placeholder-[#BE5985]/50 focus:outline-none focus:ring-2 focus:ring-[#EC7FA9]/50 focus:border-[#EC7FA9] transition-all duration-300 shadow-inner shadow-[#FFEDFA]/30"
+              placeholder="Enter your organization code"
+              value={formData.org_code}
+              onChange={(e) => setFormData(prev => ({ ...prev, org_code: e.target.value }))}
             />
           </div>
 

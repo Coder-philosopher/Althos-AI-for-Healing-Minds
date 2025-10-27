@@ -178,20 +178,8 @@ export function Sidebar({ isMobileOpen, setIsMobileOpen }: SidebarProps) {
           })}
         </nav>
 
-        {/* Wellness Streak Card */}
-        {!isCollapsed && (
-          <div className="mx-3 mb-4 p-4 rounded-2xl bg-gradient-to-br from-[#F8A5C2]/20 via-[#FFEBF3]/30 to-[#F09FCA]/20 border-2 border-[#E879B9]/30 shadow-lg">
-            <div className="flex items-start gap-3">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-[#E879B9] to-[#DB5F9A] shadow-md">
-                <Sparkles className="h-5 w-5 text-white" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-sm font-bold text-[#C74585] mb-1">7-Day Streak! 🎉</h3>
-                <p className="text-xs text-[#A03768]/70 leading-relaxed">You're building great habits. Keep it up!</p>
-              </div>
-            </div>
-          </div>
-        )}
+       
+       
 
         {/* Desktop Collapse Toggle */}
         <div className="hidden lg:flex items-center justify-center p-4 border-t-2 border-[#F8A5C2]/30 bg-gradient-to-r from-white/80 to-[#FFF5F9]/60">

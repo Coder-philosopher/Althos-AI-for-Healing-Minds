@@ -1,6 +1,8 @@
 export interface User {
   id: string;
   name: string;
+  email: string;
+  org_code?: string;
   age?: number;
   sex?: string;
   profession?: string;
@@ -9,6 +11,19 @@ export interface User {
   created_at: Date;
   updated_at: Date;
 }
+
+export interface RegisterUserRequest {
+  id: string;
+  name: string;
+  email: string;
+  org_code?: string;
+  age?: number;
+  sex?: string;
+  profession?: string;
+  hobbies?: string[];
+  locale?: string;
+}
+
 export interface JournalCoachRequest {
   text: string
   language_pref?: string
@@ -28,15 +43,6 @@ export interface JournalCoachResponse {
 }
 
 
-export interface RegisterUserRequest {
-  id: string;
-  name: string;
-  age?: number;
-  sex?: string;
-  profession?: string;
-  hobbies?: string[];
-  locale?: string;
-}
 
 export interface Journal {
   id: string;
@@ -117,4 +123,13 @@ export type ChatCacheEntry = {
   answer: string;
   tags: string[];
   created_at: string;
+}
+
+export interface Message {
+  _id: string;
+  conversationId: string;
+  sender: string;
+  receiver: string;
+  text: string;
+  timestamp: Date;
 }

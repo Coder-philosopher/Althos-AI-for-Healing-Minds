@@ -41,10 +41,15 @@ const cors_1 = __importDefault(require("cors"));
 const config_1 = __importDefault(require("./config"));
 const db_1 = __importDefault(require("./db"));
 const ai_1 = __importDefault(require("./ai"));
+// const { getSuggestedFriends, sendMessageToMongo, getMessagesFromMongo, client } = require('./db');
 const utils_1 = require("./utils");
 const audio_1 = require("./services/audio");
 const chatbot = __importStar(require("./services/chatbot"));
 const app = (0, express_1.default)();
+const crypto_1 = __importDefault(require("crypto"));
+const sec = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+const KEY = Buffer.from(sec, 'hex'); // 32 bytes
+const ALGO = 'aes-256-gcm';
 // Middleware
 const allowedOrigins = [
     "https://althos.nitrr.in",
@@ -68,6 +73,38 @@ app.use((0, cors_1.default)({
     credentials: true,
 }));
 app.use(express_1.default.json());
+app.use((req, res, next) => {
+    if (req.body?.encrypted && req.body?.iv && req.body?.tag) {
+        try {
+            const decipher = crypto_1.default.createDecipheriv(ALGO, KEY, Buffer.from(req.body.iv, 'base64'));
+            decipher.setAuthTag(Buffer.from(req.body.tag, 'base64'));
+            let decrypted = decipher.update(req.body.encrypted, 'base64', 'utf8');
+            decrypted += decipher.final('utf8');
+            req.body = JSON.parse(decrypted);
+        }
+        catch (err) {
+            return res.status(400).json({ success: false, message: 'Invalid encrypted payload' });
+        }
+    }
+    next();
+});
+// Middleware to encrypt outgoing responses
+app.use((req, res, next) => {
+    const oldJson = res.json;
+    res.json = function (body) {
+        const iv = crypto_1.default.randomBytes(12);
+        const cipher = crypto_1.default.createCipheriv(ALGO, KEY, iv);
+        let encrypted = cipher.update(JSON.stringify(body), 'utf8', 'base64');
+        encrypted += cipher.final('base64');
+        const tag = cipher.getAuthTag();
+        return oldJson.call(this, {
+            encrypted,
+            iv: iv.toString('base64'),
+            tag: tag.toString('base64'),
+        });
+    };
+    next();
+});
 // Request logging
 app.use((req, res, next) => {
     console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
@@ -108,6 +145,47 @@ const errorHandler = (error, req, res, next) => {
         message: 'Internal server error'
     });
 };
+// Friend suggestion route
+// app.get('/api/friends', async (req, res) => {
+//   const userId = req.headers['x-user-id'];
+//   if (!userId) return res.status(401).json({ success: false, message: 'Missing x-user-id header' });
+//   // Find user to get age/hobbies
+//   const db = await client.db("althos");
+//   const user = await db.collection('users').findOne({ _id: userId });
+//   if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+//   try {
+//     const friends = await getSuggestedFriends(userId, user.age || 18, user.hobbies || []);
+//     res.json({ success: true, data: friends });
+//   } catch (err) {
+//     console.error('Friend suggestion error:', err);
+//     res.status(500).json({ success: false, message: 'Internal Server Error' });
+//   }
+// });
+// // Get messages (all history)
+// app.get('/api/messages/:conversationId', async (req, res) => {
+//   const { conversationId } = req.params;
+//   try {
+//     const messages = await getMessagesFromMongo(conversationId);
+//     res.json({ success: true, data: messages });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ success: false, message: 'Server error fetching messages' });
+//   }
+// });
+// // Send message
+// app.post('/api/messages', async (req, res) => {
+//   const { conversationId, sender, receiver, text } = req.body;
+//   if (!conversationId || !sender || !receiver || !text) {
+//     return res.status(400).json({ success: false, message: 'Missing conversationId, sender, receiver, or text' });
+//   }
+//   try {
+//     await sendMessageToMongo(conversationId, sender, receiver, text);
+//     res.json({ success: true });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ success: false, message: 'Server error sending message' });
+//   }
+// });
 // =================== ROUTES ===================
 const translateRouter = require('../routes/translate');
 app.use('/api', translateRouter);
@@ -126,16 +204,16 @@ app.get('/health', async (req, res, next) => {
 app.post('/register', async (req, res, next) => {
     try {
         const userData = req.body;
-        if (!userData.id || !userData.name) {
-            throw new utils_1.AppError('User ID and name are required', 400);
+        // Validate required fields (id generated client side, so check email & name)
+        if (!userData.name || !userData.email) {
+            throw new utils_1.AppError('Name and email are required for registration', 400);
         }
-        // Check if user already exists
-        const existingUser = await db_1.default.users.findById(userData.id);
-        if (existingUser) {
-            return res.json({
-                success: true,
-                message: 'User already registered',
-                data: existingUser
+        // Check if email already registered (avoid duplicate accounts)
+        const existingUserByEmail = await db_1.default.users.findByEmailAndName(userData.email, userData.name);
+        if (existingUserByEmail) {
+            return res.status(409).json({
+                success: false,
+                message: 'User with this name and email already exists',
             });
         }
         const user = await db_1.default.users.create(userData);
@@ -162,7 +240,36 @@ app.get('/profile', requireUser, async (req, res, next) => {
             success: true,
             data: req.user,
         });
-        console.log(req.user);
+    }
+    catch (error) {
+        next(error);
+    }
+});
+app.post('/login', async (req, res, next) => {
+    try {
+        const { email, name } = req.body;
+        if (!email || !name) {
+            throw new utils_1.AppError('Email and name are required to login', 400);
+        }
+        const user = await db_1.default.users.findByEmailAndName(email, name);
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid email or name'
+            });
+        }
+        // Mimic existing login success response (you can add tokens/cookies if needed)
+        await db_1.default.logAccess({
+            user_id: user.id,
+            action: 'login',
+            resource: 'user',
+            ip_address: req.ip,
+        });
+        res.json({
+            success: true,
+            message: 'Login successful',
+            data: user
+        });
     }
     catch (error) {
         next(error);
@@ -692,7 +799,6 @@ app.get('/mood/atlas', requireUser, async (req, res, next) => {
     }
 });
 // =================== SHARING ENDPOINTS ===================
-// =================== SHARING ENDPOINTS ===================
 // Get user's shares list
 app.get('/shares/list', requireUser, async (req, res, next) => {
     try {
@@ -954,8 +1060,8 @@ app.use('*', (req, res, next) => {
 });
 // Start server
 const server = app.listen(config_1.default.port, () => {
-    console.log(`🚀 Althos backend running on port ${config_1.default.port}`);
-    console.log(`📊 Environment: ${config_1.default.nodeEnv}`);
+    console.log(`🤗 Althos backend running on port ${config_1.default.port}`);
+    console.log(`😎 Environment: ${config_1.default.nodeEnv}`);
     console.log(`🤖 AI Services: ${config_1.default.enableAI ? '✅ Enabled' : '🔄 Disabled'}`);
 });
 // Graceful shutdown

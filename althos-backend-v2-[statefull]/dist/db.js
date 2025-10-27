@@ -6,6 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.db = void 0;
 const pg_1 = require("pg");
 const config_1 = __importDefault(require("./config"));
+// import { MongoClient, ServerApiVersion, Db, Collection,ObjectId  } from 'mongodb';
+// import {  Message } from './types';
 let pool = null;
 function getPool() {
     if (!pool) {
@@ -64,14 +66,26 @@ exports.db = {
     // User operations
     users: {
         async create(userData) {
-            const result = await exports.db.query(`INSERT INTO users (id, name, age, sex, profession, hobbies, locale)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
-         RETURNING *`, [userData.id, userData.name, userData.age, userData.sex,
-                userData.profession, userData.hobbies, userData.locale]);
+            const result = await exports.db.query(`INSERT INTO users (id, name, age, sex, profession, hobbies, locale,org_code,email)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       RETURNING *`, [
+                userData.id,
+                userData.name,
+                userData.age,
+                userData.sex,
+                userData.profession,
+                userData.hobbies,
+                userData.locale,
+                userData.org_code || null,
+                userData.email,
+            ]);
             return result[0];
         },
         async findById(id) {
             return exports.db.queryOne('SELECT * FROM users WHERE id = $1', [id]);
+        },
+        async findByEmailAndName(email, name) {
+            return exports.db.queryOne('SELECT * FROM users WHERE email = $1 AND name = $2', [email, name]);
         },
         async update(id, updates) {
             const fields = Object.keys(updates).filter(k => k !== 'id');
@@ -79,8 +93,7 @@ exports.db = {
                 return null;
             const setClause = fields.map((f, i) => `${f} = $${i + 2}`).join(', ');
             const values = [id, ...fields.map(f => updates[f])];
-            const result = await exports.db.query(`UPDATE users SET ${setClause}, updated_at = NOW() 
-         WHERE id = $1 RETURNING *`, values);
+            const result = await exports.db.query(`UPDATE users SET ${setClause}, updated_at = NOW() WHERE id = $1 RETURNING *`, values);
             return result[0] || null;
         }
     },

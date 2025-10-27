@@ -3,6 +3,7 @@ import cors from 'cors';
 import config from './config';
 import db from './db';
 import ai from './ai';
+// const { getSuggestedFriends, sendMessageToMongo, getMessagesFromMongo, client } = require('./db');
 import { 
   generateId, 
   generateToken, 
@@ -26,11 +27,23 @@ import { audioService, SUPPORTED_LANGUAGES } from './services/audio';
 import * as chatbot from './services/chatbot'
 const app = express();
 
+import crypto from 'crypto';
+
+const sec = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+const KEY = Buffer.from(sec, 'hex'); // 32 bytes
+const ALGO = 'aes-256-gcm';
+
+
+
 // Middleware
 const allowedOrigins = [
   "https://althos.nitrr.in",
   "http://localhost:3000",
 ];
+
+
+
+
 
 app.use(
   cors({
@@ -54,7 +67,38 @@ app.use(
 app.use(express.json());
 
 
+app.use((req, res, next) => {
+  if (req.body?.encrypted && req.body?.iv && req.body?.tag) {
+    try {
+      const decipher = crypto.createDecipheriv(ALGO, KEY, Buffer.from(req.body.iv, 'base64'));
+      decipher.setAuthTag(Buffer.from(req.body.tag, 'base64'));
+      let decrypted = decipher.update(req.body.encrypted, 'base64', 'utf8');
+      decrypted += decipher.final('utf8');
+      req.body = JSON.parse(decrypted);
+    } catch (err) {
+      return res.status(400).json({ success: false, message: 'Invalid encrypted payload' });
+    }
+  }
+  next();
+});
 
+// Middleware to encrypt outgoing responses
+app.use((req, res, next) => {
+  const oldJson = res.json;
+  res.json = function (body) {
+    const iv = crypto.randomBytes(12);
+    const cipher = crypto.createCipheriv(ALGO, KEY, iv);
+    let encrypted = cipher.update(JSON.stringify(body), 'utf8', 'base64');
+    encrypted += cipher.final('base64');
+    const tag = cipher.getAuthTag();
+    return oldJson.call(this, {
+      encrypted,
+      iv: iv.toString('base64'),
+      tag: tag.toString('base64'),
+    });
+  };
+  next();
+});
 
 // Request logging
 app.use((req, res, next) => {
@@ -104,6 +148,57 @@ const errorHandler = (error: any, req: any, res: any, next: any) => {
   });
 };
 
+
+
+// Friend suggestion route
+// app.get('/api/friends', async (req, res) => {
+//   const userId = req.headers['x-user-id'];
+//   if (!userId) return res.status(401).json({ success: false, message: 'Missing x-user-id header' });
+
+//   // Find user to get age/hobbies
+//   const db = await client.db("althos");
+//   const user = await db.collection('users').findOne({ _id: userId });
+//   if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+//   try {
+//     const friends = await getSuggestedFriends(userId, user.age || 18, user.hobbies || []);
+//     res.json({ success: true, data: friends });
+//   } catch (err) {
+//     console.error('Friend suggestion error:', err);
+//     res.status(500).json({ success: false, message: 'Internal Server Error' });
+//   }
+// });
+
+// // Get messages (all history)
+// app.get('/api/messages/:conversationId', async (req, res) => {
+//   const { conversationId } = req.params;
+//   try {
+//     const messages = await getMessagesFromMongo(conversationId);
+//     res.json({ success: true, data: messages });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ success: false, message: 'Server error fetching messages' });
+//   }
+// });
+
+// // Send message
+// app.post('/api/messages', async (req, res) => {
+//   const { conversationId, sender, receiver, text } = req.body;
+//   if (!conversationId || !sender || !receiver || !text) {
+//     return res.status(400).json({ success: false, message: 'Missing conversationId, sender, receiver, or text' });
+//   }
+//   try {
+//     await sendMessageToMongo(conversationId, sender, receiver, text);
+//     res.json({ success: true });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ success: false, message: 'Server error sending message' });
+//   }
+// });
+
+
+
+
 // =================== ROUTES ===================
 const translateRouter = require('../routes/translate');
 app.use('/api', translateRouter);
@@ -125,30 +220,30 @@ app.get('/health', async (req, res, next) => {
 app.post('/register', async (req, res, next) => {
   try {
     const userData: RegisterUserRequest = req.body;
-    
-    if (!userData.id || !userData.name) {
-      throw new AppError('User ID and name are required', 400);
+
+    // Validate required fields (id generated client side, so check email & name)
+    if (!userData.name || !userData.email) {
+      throw new AppError('Name and email are required for registration', 400);
     }
-    
-    // Check if user already exists
-    const existingUser = await db.users.findById(userData.id);
-    if (existingUser) {
-      return res.json({
-        success: true,
-        message: 'User already registered',
-        data: existingUser
+
+    // Check if email already registered (avoid duplicate accounts)
+    const existingUserByEmail = await db.users.findByEmailAndName(userData.email, userData.name);
+    if (existingUserByEmail) {
+      return res.status(409).json({
+        success: false,
+        message: 'User with this name and email already exists',
       });
     }
-    
+   
     const user = await db.users.create(userData);
-    
+
     await db.logAccess({
       user_id: user.id,
       action: 'register',
       resource: 'user',
       ip_address: req.ip
     });
-    
+
     res.status(201).json({
       success: true,
       message: 'User registered successfully',
@@ -167,7 +262,42 @@ app.get('/profile', requireUser, async (req: any, res, next) => {
       data: req.user,
       
     });
-    console.log(req.user);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post('/login', async (req, res, next) => {
+  try {
+    const { email, name } = req.body;
+
+    if (!email || !name) {
+      throw new AppError('Email and name are required to login', 400);
+    }
+   
+    const user = await db.users.findByEmailAndName(email, name);
+    
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or name'
+      });
+    }
+
+    // Mimic existing login success response (you can add tokens/cookies if needed)
+    await db.logAccess({
+      user_id: user.id,
+      action: 'login',
+      resource: 'user',
+      ip_address: req.ip,
+    });
+
+    res.json({
+      success: true,
+      message: 'Login successful',
+      data: user
+    });
   } catch (error) {
     next(error);
   }

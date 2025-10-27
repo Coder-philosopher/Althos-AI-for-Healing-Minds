@@ -3,8 +3,8 @@
 import { useAuth } from '@/lib/auth'
 import { useState, useRef, useEffect } from 'react'
 import { 
-  Bell, Menu, LogOut, User as UserIcon, Settings, 
-  HelpCircle, Calendar, Award, TrendingUp, Sparkles 
+  Bell, Menu, LogOut, User as UserIcon, 
+  HelpCircle, Award, TrendingUp, Sparkles 
 } from 'lucide-react'
 import { Montserrat } from 'next/font/google'
 import { cn } from '@/lib/utils'
