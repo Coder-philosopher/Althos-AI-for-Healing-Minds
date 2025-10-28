@@ -76,6 +76,16 @@ async function apiCall(endpoint: string, options: RequestInit = {}) {
 
 // api.ts
 
+
+export const getOrgAnalytics = async (orgCode: string) => {
+  return apiCall('/orgs/analytics', {
+    method: 'POST',
+    body: JSON.stringify({ org_code: orgCode }),
+  });
+};
+
+
+
 export async function fetchFriends(userId:string) {
   const res = await fetch('/api/friends', {
     headers: { 'X-User-Id': userId }

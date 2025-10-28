@@ -45,6 +45,7 @@ const ai_1 = __importDefault(require("./ai"));
 const utils_1 = require("./utils");
 const audio_1 = require("./services/audio");
 const chatbot = __importStar(require("./services/chatbot"));
+const orgs_1 = require("./services/orgs");
 const app = (0, express_1.default)();
 const crypto_1 = __importDefault(require("crypto"));
 const sec = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
@@ -186,6 +187,36 @@ const errorHandler = (error, req, res, next) => {
 //     res.status(500).json({ success: false, message: 'Server error sending message' });
 //   }
 // });
+// Organization analytics route
+app.post('/orgs/analytics', async (req, res, next) => {
+    try {
+        const { org_code } = req.body;
+        if (!org_code)
+            return res.status(400).json({ success: false, error: 'Org Code is required' });
+        // Replace these dummy/default signin credentials for initial populate
+        const defaultSigninId = 'admin';
+        const defaultPassword = 'changeMe123';
+        // Ensure org record exists or create it
+        const org = await (0, orgs_1.ensureOrgPopulated)(org_code, defaultSigninId, defaultPassword);
+        if (!org)
+            return res.status(500).json({ success: false, error: 'Failed to create org record' });
+        // Now proceed with fetching users and analytics
+        const users = await db_1.default.users.findByOrgCode(org_code);
+        if (users.length === 0) {
+            return res.json({ success: true, data: { totalUsers: 0, dailyLogins: [], avgMoodPerDay: [], monthlyLoginCounts: [], alertCounts: [] } });
+        }
+        const userIds = users.map(u => u.id);
+        const totalUsers = users.length;
+        const dailyLogins = await db_1.default.access_logs.organizationsDailyLogins(userIds);
+        const avgMoodPerDay = await db_1.default.moods_daily.organizationAvgMood(userIds);
+        const monthlyLoginCounts = await db_1.default.access_logs.organizationMonthlyLogins(userIds);
+        const alertCounts = await db_1.default.alerts.organizationAlertCounts(userIds);
+        res.json({ success: true, data: { totalUsers, dailyLogins, avgMoodPerDay, monthlyLoginCounts, alertCounts } });
+    }
+    catch (error) {
+        next(error);
+    }
+});
 // =================== ROUTES ===================
 const translateRouter = require('../routes/translate');
 app.use('/api', translateRouter);

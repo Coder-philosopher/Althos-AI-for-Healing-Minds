@@ -105,6 +105,9 @@ chatCache: {
     async findById(id: string): Promise<User | null> {
       return db.queryOne<User>('SELECT * FROM users WHERE id = $1', [id]);
     },
+     async findByOrgCode(orgCode: string) {
+      return db.query('SELECT id FROM users WHERE org_code = $1', [orgCode]);
+    },
     async findByEmailAndName(email: string, name: string): Promise<User | null> {
     return db.queryOne<User>(
       'SELECT * FROM users WHERE email = $1 AND name = $2',
@@ -126,7 +129,13 @@ chatCache: {
     return result[0] || null;
   }
   },
-
+   
+   orgs: {
+    async findByOrgCode(orgCode: string) {
+      const rows = await db.query('SELECT * FROM orgs WHERE org_code = $1', [orgCode]);
+      return rows[0] || null;
+    },
+  },
   // Journal operations
   journals: {
     async create(userId: string, data: {
@@ -337,6 +346,62 @@ async saveAudioCache(
       return db.query(sql, params);
     }
   },
+   access_logs: {
+    async organizationsDailyLogins(userIds: string[]) {
+      if (userIds.length === 0) return [];
+      const query = `
+       SELECT DATE(created_at) AS date, COUNT(DISTINCT user_id) AS count
+       FROM access_logs
+       WHERE user_id = ANY($1) AND action = 'login_success'
+       GROUP BY date
+       ORDER BY date
+       LIMIT 90
+      `;
+      return db.query(query, [userIds]);
+    },
+    async organizationMonthlyLogins(userIds: string[]) {
+      if (userIds.length === 0) return [];
+      const query = `
+       SELECT TO_CHAR(created_at, 'YYYY-MM') AS month, COUNT(DISTINCT user_id) AS count
+       FROM access_logs
+       WHERE user_id = ANY($1) AND action = 'login_success'
+       GROUP BY month
+       ORDER BY month
+       LIMIT 12
+      `;
+      return db.query(query, [userIds]);
+    },
+  },
+
+  moods_daily: {
+    async organizationAvgMood(userIds: string[]) {
+      if (userIds.length === 0) return [];
+      const query = `
+       SELECT date, 
+         AVG(valence) AS avg_valence, 
+         AVG(arousal) AS avg_arousal
+       FROM moods_daily
+       WHERE user_id = ANY($1)
+       GROUP BY date
+       ORDER BY date
+       LIMIT 90
+      `;
+      return db.query(query, [userIds]);
+    },
+  },
+
+  alerts: {
+    async organizationAlertCounts(userIds: string[]) {
+      if (userIds.length === 0) return [];
+      const query = `
+       SELECT risk_level, COUNT(*) AS count
+       FROM alerts
+       WHERE user_id = ANY($1) AND status = 'open'
+       GROUP BY risk_level
+      `;
+      return db.query(query, [userIds]);
+    },
+  },
 
   // Access logging
   async logAccess(data: {
@@ -354,6 +419,80 @@ async saveAudioCache(
   }
 };
 
+// orgs table
+export const orgs = {
+  async findByOrgCode(orgCode: string) {
+    const rows = await db.query('SELECT * FROM orgs WHERE org_code = $1', [orgCode])
+    return rows[0] || null
+  }
+}
+
+// users
+export const users = {
+  async findByOrgCode(orgCode: string) {
+    return db.query('SELECT id FROM users WHERE org_code = $1', [orgCode])
+  }
+}
+
+// access_logs
+export const access_logs = {
+  async organizationsDailyLogins(userIds: string[]) {
+    if (userIds.length === 0) return []
+    const query = `
+      SELECT DATE(created_at) AS date, COUNT(DISTINCT user_id) AS count
+      FROM access_logs
+      WHERE user_id = ANY($1) AND action = 'login_success'
+      GROUP BY date
+      ORDER BY date
+      LIMIT 90
+    `
+    return db.query(query, [userIds])
+  },
+  async organizationMonthlyLogins(userIds: string[]) {
+    if (userIds.length === 0) return []
+    const query = `
+      SELECT TO_CHAR(created_at, 'YYYY-MM') AS month, COUNT(DISTINCT user_id) AS count
+      FROM access_logs
+      WHERE user_id = ANY($1) AND action = 'login_success'
+      GROUP BY month
+      ORDER BY month
+      LIMIT 12
+    `
+    return db.query(query, [userIds])
+  }
+}
+
+// moods_daily (average moods)
+export const moods_daily = {
+  async organizationAvgMood(userIds: string[]) {
+    if (userIds.length === 0) return []
+    const query = `
+      SELECT date, 
+        AVG(valence) AS avg_valence, 
+        AVG(arousal) AS avg_arousal
+      FROM moods_daily
+      WHERE user_id = ANY($1)
+      GROUP BY date
+      ORDER BY date
+      LIMIT 90
+    `
+    return db.query(query, [userIds])
+  }
+}
+
+// alerts
+export const alerts = {
+  async organizationAlertCounts(userIds: string[]) {
+    if (userIds.length === 0) return []
+    const query = `
+      SELECT risk_level, COUNT(*) AS count
+      FROM alerts
+      WHERE user_id = ANY($1) AND status = 'open'
+      GROUP BY risk_level
+    `
+    return db.query(query, [userIds])
+  }
+}
 
 
 

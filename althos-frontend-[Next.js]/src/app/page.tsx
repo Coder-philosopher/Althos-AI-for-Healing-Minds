@@ -116,6 +116,25 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
+        {/* Access Organization Dashboard Card */}
+<section className="relative z-10 flex justify-center px-4 mt-12 md:mt-16">
+  <div className="bg-white/90 backdrop-blur-lg border border-[#F09FCA]/40 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl p-8 md:p-10 max-w-2xl text-center">
+    <h2 className="text-2xl md:text-3xl font-bold text-[#C74585] mb-3">
+      Organization Dashboard Access
+    </h2>
+    <p className="text-[#A03768]/70 mb-6 md:mb-8 text-base md:text-lg font-light leading-relaxed">
+      Are you an organization partner? Access your real-time analytics and engagement insights through your dedicated dashboard.
+    </p>
+    <Link
+      href="/orgs"
+      className="inline-flex items-center gap-2 px-8 py-3 md:px-10 md:py-4 bg-gradient-to-r from-[#E879B9] to-[#C74585] text-white font-semibold rounded-full shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-transform duration-300"
+    >
+      Access Dashboard
+      <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+    </Link>
+  </div>
+</section>
+
 
         {/* Bento Grid Section */}
         <section className="relative z-10 max-w-6xl mx-auto px-4 py-12 md:py-20">

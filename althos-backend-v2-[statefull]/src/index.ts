@@ -25,6 +25,10 @@ import {
 } from './types';
 import { audioService, SUPPORTED_LANGUAGES } from './services/audio';
 import * as chatbot from './services/chatbot'
+import {ensureOrgPopulated} from './services/orgs'
+
+
+
 const app = express();
 
 import crypto from 'crypto';
@@ -195,6 +199,44 @@ const errorHandler = (error: any, req: any, res: any, next: any) => {
 //     res.status(500).json({ success: false, message: 'Server error sending message' });
 //   }
 // });
+
+
+
+
+// Organization analytics route
+app.post('/orgs/analytics', async (req, res, next) => {
+  try {
+    const { org_code } = req.body;
+    if (!org_code) return res.status(400).json({ success: false, error: 'Org Code is required' });
+
+    // Replace these dummy/default signin credentials for initial populate
+    const defaultSigninId = 'admin';
+    const defaultPassword = 'changeMe123'; 
+
+    // Ensure org record exists or create it
+    const org = await ensureOrgPopulated(org_code, defaultSigninId, defaultPassword);
+    if (!org) return res.status(500).json({ success: false, error: 'Failed to create org record' });
+
+    // Now proceed with fetching users and analytics
+    const users = await db.users.findByOrgCode(org_code);
+    if (users.length === 0) {
+      return res.json({ success: true, data: { totalUsers: 0, dailyLogins: [], avgMoodPerDay: [], monthlyLoginCounts: [], alertCounts: [] }});
+    }
+
+    const userIds = users.map(u => u.id);
+    const totalUsers = users.length;
+    const dailyLogins = await db.access_logs.organizationsDailyLogins(userIds);
+    const avgMoodPerDay = await db.moods_daily.organizationAvgMood(userIds);
+    const monthlyLoginCounts = await db.access_logs.organizationMonthlyLogins(userIds);
+    const alertCounts = await db.alerts.organizationAlertCounts(userIds);
+
+    res.json({ success: true, data: { totalUsers, dailyLogins, avgMoodPerDay, monthlyLoginCounts, alertCounts }});
+  } catch (error) {
+    next(error);
+  }
+});
+
+
 
 
 

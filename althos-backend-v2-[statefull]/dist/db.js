@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.db = void 0;
+exports.alerts = exports.moods_daily = exports.access_logs = exports.users = exports.orgs = exports.db = void 0;
 const pg_1 = require("pg");
 const config_1 = __importDefault(require("./config"));
 // import { MongoClient, ServerApiVersion, Db, Collection,ObjectId  } from 'mongodb';
@@ -84,6 +84,9 @@ exports.db = {
         async findById(id) {
             return exports.db.queryOne('SELECT * FROM users WHERE id = $1', [id]);
         },
+        async findByOrgCode(orgCode) {
+            return exports.db.query('SELECT id FROM users WHERE org_code = $1', [orgCode]);
+        },
         async findByEmailAndName(email, name) {
             return exports.db.queryOne('SELECT * FROM users WHERE email = $1 AND name = $2', [email, name]);
         },
@@ -96,6 +99,12 @@ exports.db = {
             const result = await exports.db.query(`UPDATE users SET ${setClause}, updated_at = NOW() WHERE id = $1 RETURNING *`, values);
             return result[0] || null;
         }
+    },
+    orgs: {
+        async findByOrgCode(orgCode) {
+            const rows = await exports.db.query('SELECT * FROM orgs WHERE org_code = $1', [orgCode]);
+            return rows[0] || null;
+        },
     },
     // Journal operations
     journals: {
@@ -216,10 +225,142 @@ exports.db = {
             return exports.db.query(sql, params);
         }
     },
+    access_logs: {
+        async organizationsDailyLogins(userIds) {
+            if (userIds.length === 0)
+                return [];
+            const query = `
+       SELECT DATE(created_at) AS date, COUNT(DISTINCT user_id) AS count
+       FROM access_logs
+       WHERE user_id = ANY($1) AND action = 'login_success'
+       GROUP BY date
+       ORDER BY date
+       LIMIT 90
+      `;
+            return exports.db.query(query, [userIds]);
+        },
+        async organizationMonthlyLogins(userIds) {
+            if (userIds.length === 0)
+                return [];
+            const query = `
+       SELECT TO_CHAR(created_at, 'YYYY-MM') AS month, COUNT(DISTINCT user_id) AS count
+       FROM access_logs
+       WHERE user_id = ANY($1) AND action = 'login_success'
+       GROUP BY month
+       ORDER BY month
+       LIMIT 12
+      `;
+            return exports.db.query(query, [userIds]);
+        },
+    },
+    moods_daily: {
+        async organizationAvgMood(userIds) {
+            if (userIds.length === 0)
+                return [];
+            const query = `
+       SELECT date, 
+         AVG(valence) AS avg_valence, 
+         AVG(arousal) AS avg_arousal
+       FROM moods_daily
+       WHERE user_id = ANY($1)
+       GROUP BY date
+       ORDER BY date
+       LIMIT 90
+      `;
+            return exports.db.query(query, [userIds]);
+        },
+    },
+    alerts: {
+        async organizationAlertCounts(userIds) {
+            if (userIds.length === 0)
+                return [];
+            const query = `
+       SELECT risk_level, COUNT(*) AS count
+       FROM alerts
+       WHERE user_id = ANY($1) AND status = 'open'
+       GROUP BY risk_level
+      `;
+            return exports.db.query(query, [userIds]);
+        },
+    },
     // Access logging
     async logAccess(data) {
         await exports.db.query(`INSERT INTO access_logs (user_id, action, resource, ip_address, success)
        VALUES ($1, $2, $3, $4, $5)`, [data.user_id, data.action, data.resource, data.ip_address, data.success ?? true]);
+    }
+};
+// orgs table
+exports.orgs = {
+    async findByOrgCode(orgCode) {
+        const rows = await exports.db.query('SELECT * FROM orgs WHERE org_code = $1', [orgCode]);
+        return rows[0] || null;
+    }
+};
+// users
+exports.users = {
+    async findByOrgCode(orgCode) {
+        return exports.db.query('SELECT id FROM users WHERE org_code = $1', [orgCode]);
+    }
+};
+// access_logs
+exports.access_logs = {
+    async organizationsDailyLogins(userIds) {
+        if (userIds.length === 0)
+            return [];
+        const query = `
+      SELECT DATE(created_at) AS date, COUNT(DISTINCT user_id) AS count
+      FROM access_logs
+      WHERE user_id = ANY($1) AND action = 'login_success'
+      GROUP BY date
+      ORDER BY date
+      LIMIT 90
+    `;
+        return exports.db.query(query, [userIds]);
+    },
+    async organizationMonthlyLogins(userIds) {
+        if (userIds.length === 0)
+            return [];
+        const query = `
+      SELECT TO_CHAR(created_at, 'YYYY-MM') AS month, COUNT(DISTINCT user_id) AS count
+      FROM access_logs
+      WHERE user_id = ANY($1) AND action = 'login_success'
+      GROUP BY month
+      ORDER BY month
+      LIMIT 12
+    `;
+        return exports.db.query(query, [userIds]);
+    }
+};
+// moods_daily (average moods)
+exports.moods_daily = {
+    async organizationAvgMood(userIds) {
+        if (userIds.length === 0)
+            return [];
+        const query = `
+      SELECT date, 
+        AVG(valence) AS avg_valence, 
+        AVG(arousal) AS avg_arousal
+      FROM moods_daily
+      WHERE user_id = ANY($1)
+      GROUP BY date
+      ORDER BY date
+      LIMIT 90
+    `;
+        return exports.db.query(query, [userIds]);
+    }
+};
+// alerts
+exports.alerts = {
+    async organizationAlertCounts(userIds) {
+        if (userIds.length === 0)
+            return [];
+        const query = `
+      SELECT risk_level, COUNT(*) AS count
+      FROM alerts
+      WHERE user_id = ANY($1) AND status = 'open'
+      GROUP BY risk_level
+    `;
+        return exports.db.query(query, [userIds]);
     }
 };
 exports.default = exports.db;
