@@ -64,12 +64,52 @@ AemcgjriOz1pUEqR6V9Eqg==
       universe_domain: 'googleapis.com'
     }
   },
-  gcp2: {
-  credentials: require('./cred/gcp2.json'), // your new key
-  projectId: 'gen-lang-client-0242961376',
-  bucketName: 'althos-music-bucket',
-},
 
+  // Hardcoded GCP2 credentials
+  gcp2: {
+    projectId: 'gen-lang-client-0242961376',
+    bucketName: 'althos-music-bucket',
+    credentials: {
+      type: 'service_account',
+      project_id: 'gen-lang-client-0242961376',
+      private_key_id: '2769b226a9b8439c4810e6d857161b803d8c5c0b',
+      private_key: `-----BEGIN PRIVATE KEY-----
+MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDFeDxOlqQkWhNX
+4s3fGfIPesMNLNR15h+eNfnd1Lmto9+XaEAFUTtJ9/PPXVEK1oEWVvdJPeNxVBrj
+iCnsFFqSodnzYkeUsjtt2SYSzyAhyMZFAPkV9sfweybT0t2s8l4VhRZTCHE9pgTP
+8IlGfWJ957gZsMYeIpGH7TBtxWNM+xh5cJZhNQDKw58iN/optTUY3aIaxXbGOCHf
+ajJ1I5tXqirIZaHPts350Fnz4Ctn0Vw7l4r+Go2eHb5QEWUqzKz99CKldL3gYSFo
+U8n2MFHhEUz6HaN52+RpUIqrD1XiL7V7TxURjHu7fmSNj9pdbYCthrwTMTaRxPr1
+bjtB/v0pAgMBAAECggEAHyGAlxPORmwsPtTi3NMOeLHt/G6UA2Q8mX4WlAoRyFXx
+4sDiJZRz/Yoeqz3MZXeB+/TI4QiQieYW+RuXHwCUc30a9ZuJql+w2R/8jcbj4L+c
+wPXReaIhTNW1aNEw9lodSqo5EJe09oxCQkqVnFcZsbytUYuEqEKN4TkbmJVKPYZ+
+/hRH5dlRGtVsZ4bQRzxx6qvdCTVYBx9+JF0BraWnC05IwsL6b/Vvmg6FnAHZMjef
+vVEfH2zXda9XXJw8tk8noW0saeNHfHUCAumQv5I0+/gu/rgMSzfsTUERPOj6JgXL
+tzgGJXS1G1qup/OGPzYnOLceTRZJz6eK2LvWJX54ewKBgQD80YLLtXfdQw1Gl83M
+o+Bwd+iV4c+neZANzP46BF9Ow3s27bN09jHM40jQ5iUoeIBsGzetxHVBKJMDM+hu
+G/vO6DurOgHhEuyFqQ/ohmInOY24GA6zMKHJtuNeAHjp9CJVy0ri70sO9kR/S9kb
+97sXXHAuPZEVFx8dJPL9Ein38wKBgQDH9GlAcMufX8HlCT8yg6dFs53AHaEPSwQ+
+xqKc26RID+L7cYMyGZooqqTUu4f/SWeHNNT8c8mkbHyHJvTg1+t8B2MpF2sUzpEH
+f9xrzQEEfPEL7itkNvf3vUhJ7wGRTIb3AmFNPcAJr8cnSUQ/uSSKIDSa3uo7NUch
+95SSqrK5cwKBgQDNzC5QbLPZ5Q8Ve9UG1A+K/dDS0TIb/hSJZ2k7CPwcPXw7Rlti
+xlXblthbVDzDKPRBDBbS2K0qEUE6xjJaD2V3FAweYeXNtX3bf7d3bIzRqUP3q32r
+19abQMjsaC4FI7ofZJDdEjVjRIyVosRkw9AEQDcBLRTAukWVj9JMt1B6iQKBgQCi
+jWGbT5dZwyD/r1q/GCQ+F90gt3Wd1yBmYFkGJ9EP/EpMm2VKr2GRudgyURooQWZ2
+lk6nxQGiN8esn9DnkOERfXfxieY1jhB9BkcNJCW1nlTfnAmOeNlxf2FrKXAezRXT
+bQ3pG1ApD8tZdsiS/VJlL/VUCfBlndRsGref3EFbXQKBgQCSQnY9kweAG7s3X8xt
+sjhW4F0QkJa9PzBy3L/eFUbkD/5YmsmLa8ZP7dvfUNHL2EM1X487cLzOh5s94+U0
+iAWbWZkyiOt7wel1VXDWYQ/GuAUEPJKlrl2F4X8+b0Maro6BXoaG5/vwi0VS3scI
+8/vaGfsUNJ2+oyw8cUImIGhmqg==
+-----END PRIVATE KEY-----`,
+      client_email: 'althos-music@gen-lang-client-0242961376.iam.gserviceaccount.com',
+      client_id: '109763354884951187205',
+      auth_uri: 'https://accounts.google.com/o/oauth2/auth',
+      token_uri: 'https://oauth2.googleapis.com/token',
+      auth_provider_x509_cert_url: 'https://www.googleapis.com/oauth2/v1/certs',
+      client_x509_cert_url: 'https://www.googleapis.com/robot/v1/metadata/x509/althos-music%40gen-lang-client-0242961376.iam.gserviceaccount.com',
+      universe_domain: 'googleapis.com'
+    }
+  }
 };
 
 // Validation
