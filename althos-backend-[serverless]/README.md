@@ -4,7 +4,7 @@ This is the complete serverless backend implementation for the Althos mental wel
 
 ## Architecture Overview
 
-Frontend (Vercel + Next.js)
+Frontend (Next.js)
     ↓ HTTPS
 Google Cloud Functions (Serverless)
     ↓ Connection Pooling
@@ -60,5 +60,5 @@ npm run serve
 - **Connection Pooling**: Optimized for serverless with connection limits
 - **Cold Start Optimization**: Minimal imports and lazy initialization
 - **Environment Variables**: Managed through Cloud Functions configuration
-- **CORS Handling**: Built into each function for Vercel frontend
+- **CORS Handling**: Built into each function for frontend
 - **Error Handling**: Structured for Cloud Functions runtime

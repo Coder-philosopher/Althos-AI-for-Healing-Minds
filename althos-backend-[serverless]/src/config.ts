@@ -24,8 +24,8 @@ export const config = {
   enableTTS: process.env.ENABLE_TTS !== 'false',
   enableRealAI: process.env.ENABLE_REAL_AI !== 'false',
   
-  // CORS Configuration (for Vercel frontend)
-  corsOrigin: process.env.CORS_ORIGIN?.split(',') || ['https://*.vercel.app', 'http://localhost:3000'],
+  // CORS Configuration (for frontend)
+  corsOrigin: process.env.CORS_ORIGIN?.split(',') || ['https://*.nitrr.in', 'http://localhost:3000'],
   
   // Serverless Database Pool Settings
   dbPool: {

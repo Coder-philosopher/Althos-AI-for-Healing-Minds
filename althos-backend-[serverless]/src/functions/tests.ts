@@ -7,7 +7,7 @@ import { testExplanations } from '../copy';
 
 // CORS
 function setCors(res: any, origin?: string) {
-  const allowed = ['https://your-frontend.vercel.app', 'http://localhost:3000'];
+  const allowed = ['althos.nitrr.in', 'http://localhost:3000'];
   const o = origin || '';
   if (allowed.some(a => o.includes(a.replace('*', '')))) res.set('Access-Control-Allow-Origin', o);
   res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');

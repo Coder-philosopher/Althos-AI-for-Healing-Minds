@@ -69,7 +69,7 @@ To democratize mental health support for Indian youth by providing accessible, c
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/althos.git
+git clone https://github.com/Coder-philosopher/Althos-AI-for-Healing-Minds.git
 cd althos
 ````
 
@@ -223,7 +223,7 @@ althos/
 ### Backend
 
 ```bash
-cd backend
+cd althos-backend-v2-[statefull]
 npm test
 npm run test:integration
 npm run test:coverage
@@ -232,7 +232,7 @@ npm run test:coverage
 ### Frontend
 
 ```bash
-cd frontend
+cd althos-frontend-[Next.js]
 npm test
 npm run test:e2e
 npm run test:a11y
@@ -248,13 +248,6 @@ npm run test:a11y
 npm run build
 gcloud functions deploy althos-backend --runtime nodejs18
 gcloud run deploy althos-backend --source .
-```
-
-### Frontend (Vercel)
-
-```bash
-vercel --prod
-npm run build && npm run export
 ```
 
 ---
@@ -304,7 +297,6 @@ Provided "AS IS", without warranty of any kind.
 
 * Google Cloud Vertex AI
 * Neon PostgreSQL
-* Vercel
 * shadcn/ui
 * Mental health professionals
 * Indian youth community testers

@@ -191,6 +191,15 @@ export const getJournalCoaching = async (userId: string, journalId: string) => {
   })
 }
 
+export async function generateAIMusic(userId: string, payload: { mood_text: string; mood_label: string }) {
+  return await apiCall('/ai/music', {
+    method: 'POST',
+    headers: { 'X-User-Id': userId },
+    body: JSON.stringify(payload),
+  })
+}
+
+
 
 export const getJournalById = async (userId: string, journalId: string) => {
   return apiCall(`/journal/${journalId}`, {

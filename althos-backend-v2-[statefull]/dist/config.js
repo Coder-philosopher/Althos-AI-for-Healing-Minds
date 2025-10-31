@@ -64,7 +64,12 @@ AemcgjriOz1pUEqR6V9Eqg==
             client_x509_cert_url: 'https://www.googleapis.com/robot/v1/metadata/x509/althos-translator%40gen-lang-client-0242961376.iam.gserviceaccount.com',
             universe_domain: 'googleapis.com'
         }
-    }
+    },
+    gcp2: {
+        credentials: require('./cred/gcp2.json'), // your new key
+        projectId: 'gen-lang-client-0242961376',
+        bucketName: 'althos-music-bucket',
+    },
 };
 // Validation
 if (!exports.config.databaseUrl) {

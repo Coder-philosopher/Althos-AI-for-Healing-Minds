@@ -1080,6 +1080,47 @@ Professional clinical assessment recommended for comprehensive evaluation.
         next(error);
     }
 });
+//ai music feature
+app.post('/ai/music', requireUser, async (req, res, next) => {
+    try {
+        const { mood_text, mood_label } = req.body;
+        if (!mood_text || !mood_label) {
+            throw new utils_1.AppError('Mood text and mood label are required', 400);
+        }
+        // Check if AI music response already exists (cache)
+        const cachedMusicUrl = await db_1.default.music.getMusicCache(req.userId, mood_text, mood_label);
+        if (cachedMusicUrl) {
+            return res.json({
+                success: true,
+                data: { audioUrl: cachedMusicUrl, cached: true }
+            });
+        }
+        // Construct prompt for Vertex AI MusicLM
+        const promptText = `Generate a short instrumental music clip for mood: ${mood_label}. Description: ${mood_text}`;
+        // Call Vertex AI MusicLM via audioService
+        const result = await audio_1.audioService.generateAndCacheMusic({
+            prompt: promptText,
+            userId: req.userId,
+            mood_text,
+            mood_label
+        });
+        // Save music cache
+        await db_1.default.music.saveMusicCache(req.userId, mood_text, mood_label, result.audioUrl);
+        await db_1.default.logAccess({
+            user_id: req.userId,
+            action: 'ai_music_generation',
+            resource: 'ai',
+            ip_address: req.ip
+        });
+        res.json({
+            success: true,
+            data: result
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
 // Error handling
 app.use(errorHandler);
 // 404 handler

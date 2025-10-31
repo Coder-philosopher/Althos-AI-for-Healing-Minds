@@ -17,7 +17,7 @@ import { AppError, getWeekBounds } from '../utils';
 
 // CORS helper
 const setCorsHeaders = (res: any, origin?: string) => {
-  const allowedOrigins = ['https://your-frontend.vercel.app', 'http://localhost:3000'];
+  const allowedOrigins = ['https://althos.nitrr.in', 'http://localhost:3000'];
   const requestOrigin = origin || '';
   
   if (allowedOrigins.some(allowed => requestOrigin.includes(allowed.replace('*', '')))) {

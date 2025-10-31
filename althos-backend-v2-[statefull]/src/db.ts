@@ -280,6 +280,28 @@ async saveAudioCache(
 
 
   },
+  music: {
+  // Retrieve cached music url for user for a given mood text and label
+  async getMusicCache(userId: string, moodText: string, moodLabel: string): Promise<string | null> {
+    const result = await db.queryOne<{ audio_url: string }>(
+      `SELECT audio_url FROM music_ai_responses
+       WHERE user_id = $1 AND mood_text = $2 AND mood_label = $3`,
+      [userId, moodText, moodLabel]
+    );
+    return result?.audio_url || null;
+  },
+
+  // Save the AI music url cache
+  async saveMusicCache(userId: string, moodText: string, moodLabel: string, audioUrl: string): Promise<void> {
+    await db.query(
+      `INSERT INTO music_ai_responses (user_id, mood_text, mood_label, audio_url)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (user_id, mood_text, mood_label)
+       DO UPDATE SET audio_url = EXCLUDED.audio_url`,
+      [userId, moodText, moodLabel, audioUrl]
+    );
+  }
+},
 
   // Test operations
   tests: {
